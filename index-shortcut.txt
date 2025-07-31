@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=App
+Type=Application
+Exec=xdg-open /home/chanbai/chan/html-ok/index.html
+Icon=web-browser
+Terminal=false

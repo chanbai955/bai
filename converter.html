@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INR to MYR Expense Converter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to the top */
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px; /* Reduced padding */
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 25px 30px; /* Slightly reduced padding */
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 650px; /* Smaller max-width */
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.8em; /* Slightly smaller font size */
+        }
+
+        /* --- CURRENT DATE STYLE --- */
+        .current-date {
+            font-size: 1em; /* Slightly smaller */
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .india-time {
+            font-size: 0.9em; /* Slightly smaller */
+            color: blue;
+            margin-bottom: 20px; /* Reduced spacing */
+        }
+        /* --- END CURRENT DATE STYLE --- */
+
+        .conversion-rate-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 25px; /* Reduced spacing */
+            flex-wrap: wrap;
+        }
+
+        .conversion-rate-section label {
+            font-weight: bold;
+            white-space: nowrap;
+            font-size: 0.95em; /* Slightly smaller */
+        }
+
+        .conversion-rate-section input[type="number"] {
+            width: 90px; /* Slightly narrower */
+            padding: 7px; /* Slightly less padding */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em; /* Slightly smaller */
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        .conversion-rate-section input[type="number"]:read-only {
+            background-color: #e9ecef;
+            cursor: default;
+        }
+
+        .conversion-rate-section button {
+            padding: 7px 12px; /* Slightly less padding */
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em; /* Slightly smaller */
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .live-rate-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .live-rate-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .live-rate-btn:disabled {
+            background-color: #a0c3e0;
+            cursor: not-allowed;
+        }
+
+        .manual-rate-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        .manual-rate-btn:hover {
+            background-color: #5a6268;
+        }
+        .manual-rate-btn:disabled {
+            background-color: #bbbfc3;
+            cursor: not-allowed;
+        }
+
+        .live-rate-display {
+            font-size: 0.85em; /* Slightly smaller */
+            color: #666;
+            flex-basis: 100%;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .status-message {
+            padding: 7px 10px; /* Slightly less padding */
+            border-radius: 6px;
+            margin-bottom: 18px; /* Reduced spacing */
+            font-size: 0.8em; /* Slightly smaller */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-offline {
+            background-color: #ffe0b2;
+            color: #e65100;
+            border: 1px solid #ffcc80;
+        }
+
+        .status-online {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 12px; /* Reduced spacing */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-row input {
+            padding: 9px; /* Slightly less padding */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em; /* Slightly smaller */
+            flex-grow: 1;
+        }
+
+        .input-row input[type="number"] {
+            width: 90px; /* Fixed width for amount */
+        }
+
+        .add-row-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 9px 18px; /* Slightly less padding */
+            border-radius: 6px;
+            font-size: 0.95em; /* Slightly smaller */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-row-btn:hover {
+            background-color: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px; /* Reduced spacing */
+            background-color: #fdfdfd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px 12px; /* Slightly less padding */
+            border: 1px solid #eee;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #555;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em; /* Slightly smaller */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px; /* Slightly less padding */
+            margin: 0 2px; /* Reduced margin */
+            font-size: 1em; /* Slightly smaller */
+            transition: transform 0.2s ease;
+        }
+
+        .action-buttons button:hover {
+            transform: scale(1.1);
+        }
+
+        .edit-btn {
+            color: #ffc107;
+        }
+
+        .delete-btn {
+            color: #dc3545;
+        }
+
+        .save-button-wrapper {
+            margin-top: 25px; /* Reduced spacing */
+            text-align: center;
+        }
+
+        .save-button {
+            background-color: transparent;
+            color: white; /* Still white, but the background is transparent */
+            padding: 10px 20px; /* Slightly less padding */
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em; /* Slightly smaller */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .save-button:hover {
+            background-color: transparent; /* No hover effect on transparent background for now */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px 20px; /* More reduced padding */
+            }
+            h1 {
+                font-size: 1.6em; /* Even smaller */
+            }
+            .conversion-rate-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .conversion-rate-section input[type="number"],
+            .input-row input {
+                width: calc(100% - 16px); /* Adjust for padding */
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #eee;
+                margin-bottom: 8px; /* Reduced margin */
+                border-radius: 8px;
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: calc(50% - 20px);
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+                color: #555;
+            }
+            .action-buttons {
+                text-align: center;
+                padding-left: 0 !important;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>INR to MYR Converter</h1>
+        <div class="current-date" id="current-date"></div>
+        <div class="india-time" id="india-time"></div>
+        <div class="status-message status-offline hidden" id="status-offline-msg">
+            Offline: Using cached rate. Last updated: <span id="last-updated-time">N/A</span>. <br>
+            **You can manually key in your desired rate above.**
+        </div>
+        <div class="status-message status-online hidden" id="status-online-msg">
+            ** Chanthiran Sivaperuman **
+        </div>
+
+        <div class="conversion-rate-section">
+            <label for="conversionRate">Conversion Rate (INR → MYR):</label>
+            <input type="number" id="conversionRate" value="0.049" step="0.00001">
+            <button class="live-rate-btn" id="useLiveRateBtn">Use Live Rate</button>
+            <button class="manual-rate-btn hidden" id="useManualRateBtn">Use Manual Rate</button>
+            <span class="live-rate-display" id="live-rate-display">(Live rate: N/A MYR)</span>
+        </div>
+
+        <div class="input-row">
+            <input type="number" id="newAmountINR" placeholder="Amount (INR)" min="0" step="0.01">
+            <button class="add-row-btn" id="addRowBtn">Add Entry</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Amount (INR)</th>
+                    <th>Converted (MYR)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+            </tbody>
+        </table>
+
+        <div class="save-button-wrapper">
+            <button class="save-button" id="saveButton">
+                💾
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = '536ea3886c87b68ed9b50bb7'; // Replace with your actual API key
+        const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/INR`;
+
+        const CACHE_KEY_RATE = 'inrToMyrRateExpense';
+        const CACHE_KEY_TIMESTAMP = 'lastRateUpdateExpense';
+        const CACHE_KEY_ENTRIES = 'expenseEntries';
+
+        const conversionRateInput = document.getElementById('conversionRate');
+        const useLiveRateBtn = document.getElementById('useLiveRateBtn');
+        const useManualRateBtn = document.getElementById('useManualRateBtn');
+        const liveRateDisplay = document.getElementById('live-rate-display');
+        const newAmountINRInput = document.getElementById('newAmountINR');
+        const addRowBtn = document.getElementById('addRowBtn');
+        const expenseTableBody = document.getElementById('expenseTableBody');
+        const saveButton = document.getElementById('saveButton');
+        const statusOfflineMsg = document.getElementById('status-offline-msg');
+        const statusOnlineMsg = document.getElementById('status-online-msg');
+        const lastUpdatedTimeSpan = document.getElementById('last-updated-time');
+        const currentDateElement = document.getElementById('current-date');
+        const indiaTimeElement = document.getElementById('india-time');
+
+        let expenseEntries = [];
+        let isUsingLiveRate = true;
+
+        // --- Utility Functions ---
+
+        function formatCurrency(amount, currency = 'INR') {
+            if (currency === 'INR') {
+                return `₹${parseFloat(amount).toFixed(2)}`;
+            } else if (currency === 'MYR') {
+                return `RM${parseFloat(amount).toFixed(2)}`;
+            }
+            return parseFloat(amount).toFixed(2);
+        }
+
+        function displayCurrentDateAndTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            currentDateElement.textContent = ` ${now.toLocaleDateString('en-US', options)}`;
+
+            const indiaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            indiaTimeElement.textContent = ` ${indiaTime.toLocaleTimeString('en-US', timeOptions)}`;
+        }
+
+        setInterval(displayCurrentDateAndTime, 1000);
+
+
+        // --- Status and Rate Management ---
+
+        function updateRateInputState() {
+            if (isUsingLiveRate) {
+                conversionRateInput.readOnly = true;
+                conversionRateInput.style.backgroundColor = '#e9ecef';
+                useLiveRateBtn.classList.add('hidden');
+                useManualRateBtn.classList.remove('hidden');
+            } else {
+                conversionRateInput.readOnly = false;
+                conversionRateInput.style.backgroundColor = '';
+                useLiveRateBtn.classList.remove('hidden');
+                useManualRateBtn.classList.add('hidden');
+            }
+        }
+
+        function updateOnlineStatusUI(isOnline) {
+            if (isOnline) {
+                statusOnlineMsg.classList.remove('hidden');
+                statusOfflineMsg.classList.add('hidden');
+                useLiveRateBtn.disabled = false;
+                isUsingLiveRate = true;
+            } else {
+                statusOnlineMsg.classList.add('hidden');
+                statusOfflineMsg.classList.remove('hidden');
+                useLiveRateBtn.disabled = true;
+                isUsingLiveRate = false;
+                useManualRateBtn.classList.add('hidden');
+
+                const lastUpdated = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+                if (lastUpdated) {
+                    lastUpdatedTimeSpan.textContent = new Date(parseInt(lastUpdated)).toLocaleString();
+                } else {
+                    lastUpdatedTimeSpan.textContent = "Never";
+                }
+            }
+            updateRateInputState();
+        }
+
+        async function fetchExchangeRate() {
+            console.log('Attempting to fetch real-time exchange rate...');
+            useLiveRateBtn.disabled = true;
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    if (navigator.onLine === false || response.status === 0) {
+                        throw new Error('Network appears to be offline or unreachable.');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data && data.conversion_rates && data.conversion_rates.MYR) {
+                    const rate = data.conversion_rates.MYR;
+                    localStorage.setItem(CACHE_KEY_RATE, rate.toString());
+                    localStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString());
+                    conversionRateInput.value = rate.toFixed(5);
+                    liveRateDisplay.textContent = `(Live rate: ${rate.toFixed(5)} MYR)`;
+                    updateOnlineStatusUI(true);
+                    console.log('Exchange rate fetched and cached successfully:', rate);
+                    return rate;
+                } else {
+                    throw new Error('Invalid API response structure or missing MYR rate.');
+                }
+            } catch (error) {
+                console.error('Failed to fetch exchange rate:', error);
+                updateOnlineStatusUI(false);
+                useLiveRateBtn.disabled = false;
+
+                const cachedRate = localStorage.getItem(CACHE_KEY_RATE);
+                if (cachedRate) {
+                    conversionRateInput.value = parseFloat(cachedRate).toFixed(5);
+                    liveRateDisplay.textContent = `(Cached rate: ${parseFloat(cachedRate).toFixed(5)} MYR)`;
+                    console.log('Using cached rate:', cachedRate);
+                } else {
+                    conversionRateInput.value = '0.049';
+                    liveRateDisplay.textContent = '(No live/cached rate. Please enter manually.)';
+                }
+                return null;
+            } finally {
+                calculateTotals(); // Still call to update individual converted amounts
+            }
+        }
+
+        // --- Expense Entry Management ---
+
+        function calculateConvertedMYR(inrAmount) {
+            const rate = parseFloat(conversionRateInput.value);
+            if (isNaN(rate) || rate <= 0) {
+                return 0;
+            }
+            return (inrAmount * rate).toFixed(2);
+        }
+
+        function calculateTotals() {
+            renderTable();
+        }
+
+        function renderTable() {
+            expenseTableBody.innerHTML = '';
+
+            expenseEntries.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                const convertedMYR = calculateConvertedMYR(entry.amountINR);
+
+                tr.innerHTML = `
+                    <td data-label="Amount (INR)">${formatCurrency(entry.amountINR, 'INR')}</td>
+                    <td data-label="Converted (MYR)">${formatCurrency(convertedMYR, 'MYR')}</td>
+                    <td data-label="Action" class="action-buttons">
+                        <button class="edit-btn" data-index="${index}" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="delete-btn" data-index="${index}" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </td>
+                `;
+                expenseTableBody.appendChild(tr);
+            });
+        }
+
+        function addEntry() {
+            const amountINR = parseFloat(newAmountINRInput.value);
+
+            if (isNaN(amountINR) || amountINR <= 0) {
+                alert('Please enter a valid positive amount in INR.');
+                newAmountINRInput.focus();
+                return;
+            }
+
+            expenseEntries.push({ amountINR: amountINR });
+            newAmountINRInput.value = '';
+            renderTable();
+            saveEntriesToLocalStorage();
+        }
+
+        function editEntry(index) {
+            const currentEntry = expenseEntries[index];
+            const newAmount = prompt('Enter new amount for this entry (INR):', currentEntry.amountINR);
+
+            if (newAmount !== null) {
+                const parsedAmount = parseFloat(newAmount);
+                if (!isNaN(parsedAmount) && parsedAmount > 0) {
+                    expenseEntries[index].amountINR = parsedAmount;
+                    renderTable();
+                    saveEntriesToLocalStorage();
+                } else {
+                    alert('Invalid amount. Please enter a valid positive number.');
+                }
+            }
+        }
+
+        function deleteEntry(index) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                expenseEntries.splice(index, 1);
+                renderTable();
+                saveEntriesToLocalStorage();
+            }
+        }
+
+        // --- Local Storage Management ---
+
+        function saveEntriesToLocalStorage() {
+            localStorage.setItem(CACHE_KEY_ENTRIES, JSON.stringify(expenseEntries));
+        }
+
+        function loadEntriesFromLocalStorage() {
+            const savedEntries = localStorage.getItem(CACHE_KEY_ENTRIES);
+            if (savedEntries) {
+                expenseEntries = JSON.parse(savedEntries);
+                renderTable();
+            }
+        }
+
+        // --- Event Listeners ---
+
+        addRowBtn.addEventListener('click', addEntry);
+        newAmountINRInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addEntry();
+            }
+        });
+
+        expenseTableBody.addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const index = parseInt(target.dataset.index);
+            if (target.classList.contains('edit-btn')) {
+                editEntry(index);
+            } else if (target.classList.contains('delete-btn')) {
+                deleteEntry(index);
+            }
+        });
+
+        useLiveRateBtn.addEventListener('click', fetchExchangeRate);
+
+        useManualRateBtn.addEventListener('click', () => {
+            isUsingLiveRate = false;
+            updateRateInputState();
+            liveRateDisplay.textContent = '(Using manual rate)';
+            calculateTotals();
+        });
+
+        conversionRateInput.addEventListener('input', calculateTotals);
+
+        saveButton.addEventListener('click', () => {
+            saveEntriesToLocalStorage();
+            alert('Data saved to your browser!');
+        });
+
+        // --- Initialization ---
+
+        window.addEventListener('load', () => {
+            displayCurrentDateAndTime();
+
+            const cachedRate = localStorage.getItem(CACHE_KEY_RATE);
+            if (cachedRate) {
+                conversionRateInput.value = parseFloat(cachedRate).toFixed(5);
+                liveRateDisplay.textContent = `(Cached rate: ${parseFloat(cachedRate).toFixed(5)} MYR)`;
+            } else {
+                conversionRateInput.value = '0.049';
+                liveRateDisplay.textContent = '(Using default rate)';
+            }
+
+            fetchExchangeRate().then(() => {
+                loadEntriesFromLocalStorage();
+            });
+
+            window.addEventListener('online', () => {
+                console.log('Browser is online!');
+                fetchExchangeRate().then(() => {
+                    // calculateTotals is called by fetchExchangeRate
+                });
+            });
+            window.addEventListener('offline', () => {
+                console.log('Browser is offline!');
+                updateOnlineStatusUI(false);
+                calculateTotals();
+            });
+
+            updateOnlineStatusUI(navigator.onLine);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,747 @@
+<div id="run-tracker-wrapper">
+  <style>
+    /* Keep your original styles */
+    #run-tracker-wrapper {
+      font-family: Arial, sans-serif;
+      background: none;
+      text-align: center;
+      padding: 8px;
+      font-size: 12px;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .toggle-run-button {
+      background: linear-gradient(145deg, grey, #2E7D32);
+      color: white;
+      padding: 8px 30px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 8px 0 #1b5e20, 0 8px 15px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      position: relative;
+    }
+
+    .toggle-run-button:hover {
+      background: linear-gradient(135deg, #00bcd4, #1e88e5);
+      transform: scale(1.02);
+    }
+
+    .modal-content {
+      visibility: hidden;
+      height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      margin-top: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      font-size: 12px;
+    }
+
+    .modal-content.show {
+      visibility: visible;
+      height: auto;
+      opacity: 1;
+    }
+
+    #passwordModal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #passwordModal .modal-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #passwordText {
+      display: none;
+    }
+
+    /* 3D button styles */
+    #passwordModal button {
+      padding: 10px 20px;
+      margin: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 6px 15px rgba(0, 0, 0, 0.3);
+      position: relative;
+      top: 0;
+    }
+
+    #passwordModal button:hover {
+      transform: scale(1.03);
+    }
+
+    #passwordModal button:active {
+      top: 4px;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #passwordModal button:first-of-type {
+      background: linear-gradient(145deg, #66bb6a, #388e3c);
+      color: white;
+    }
+
+    #passwordModal button:last-of-type {
+      background: linear-gradient(145deg, #ef5350, #c62828);
+      color: white;
+    }
+
+    #passwordModal input[type="password"] {
+      padding: 6px 10px;
+      width: 60%;
+      font-size: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #f5f5f5;
+      box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1),
+        inset -1px -1px 3px rgba(255, 255, 255, 0.7);
+      transition: all 0.3s ease-in-out;
+      outline: none;
+    }
+
+    #passwordModal input[type="password"]:focus {
+      background: #ffffff;
+      box-shadow: 0 0 0 2px #66bb6a;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #b991e6;
+      font-weight: bold;
+      font-family: "Trebuchet MS", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .progress-container {
+      background: #ccc;
+      border-radius: 20px;
+      height: 16px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      background: #3f51b5;
+      height: 100%;
+      color: white;
+      font-size: 10px;
+      line-height: 16px;
+      white-space: nowrap;
+      box-sizing: border-box;
+      padding: 0 4px;
+      text-align: center;
+    }
+
+    /* Style for run progress bar (can be explicit if needed) */
+    #miniProgressBar {
+      background: #3f51b5;
+      /* Blue for running */
+    }
+
+    /* New style for cycle progress bar */
+    #miniCycleProgressBar {
+      background: #e91e63;
+      /* Pink/Red for cycle */
+    }
+
+    /* Container for both mini progress bars to be side-by-side */
+    #miniProgressBarsWrapper {
+      display: flex;
+      gap: 5px;
+      /* Space between the two bars */
+      justify-content: center;
+      margin-top: 10px;
+      align-items: center;
+      /* Align items vertically in the center */
+    }
+
+    #miniProgressBarsWrapper .progress-item {
+      display: flex;
+      /* Make each item a flex container */
+      align-items: center;
+      /* Vertically align the title and progress bar */
+      flex: 1;
+      /* Allows them to take equal space */
+    }
+
+    #miniProgressBarsWrapper .progress-item .progress-title {
+      margin-right: 5px;
+      /* Space between title and progress bar */
+      font-size: 10px;
+      /* Smaller font size */
+      font-weight: bold;
+      color: yellow;
+      /* yellow color */
+    }
+
+    #miniProgressBarsWrapper .progress-item .progress-container {
+      flex: 1;
+      /* Allows the progress bar to take remaining space */
+      margin: 0;
+    }
+
+
+    .goal-button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 5px;
+      margin: 6px auto;
+      display: block;
+    }
+
+    input[type="number"],
+    input[type="date"] {
+      padding: 6px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 90%;
+      margin: 6px auto;
+      display: block;
+    }
+
+    button {
+      font-size: 11px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      margin: 3px;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .reset-btn {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .km-btn {
+      background: #388e3c;
+      color: white;
+    }
+
+    .edit-btn {
+      background: #1976d2;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #c62828;
+      color: white;
+    }
+
+    #countdownDisplay,
+    #details,
+    #history,
+    #cycleCountdownDisplay {
+      color: #000 !important;
+      z-index: 999 !important;
+      font-size: 11px;
+    }
+
+    #countdownDisplay,
+    #cycleCountdownDisplay {
+      animation: fadeInOut 3s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%,
+      100% {
+        opacity: 0.2;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .run-entry {
+      background: #fff !important;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      padding: 6px 10px;
+      margin: 6px auto;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .hover-date {
+      visibility: hidden;
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      background: #eee;
+      color: #333;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .run-entry:hover .hover-date {
+      visibility: visible;
+    }
+
+    .edit-date-container {
+      margin-top: 2px;
+    }
+  </style>
+
+  <button id="toggleRunBtn" class="toggle-run-button">Virtual🚶‍♂️️🏃‍♂️️🚴‍♀️️</button>
+
+  <div id="miniProgressBarsWrapper">
+    <div class="progress-item">
+  <span class="progress-title">Run</span>
+  <div class="progress-container" id="miniRunProgressContainer">
+    <div class="progress-bar" id="miniProgressBar">
+      0.00 / 100 km
+    </div>
+  </div>
+</div>
+
+   <div class="progress-item">
+  <span class="progress-title">Cycle</span>
+  <div class="progress-container" id="miniCycleProgressContainer">
+    <div class="progress-bar" id="miniCycleProgressBar">
+      0.00 / 100 km
+    </div>
+  </div>
+</div>
+  </div>
+
+
+  <div id="passwordModal">
+    <div class="modal-box">
+      <div id="passwordText">please</div>
+      <input type="password" id="passwordInput" placeholder="Enter password" />
+
+      <br />
+      <button onclick="handlePasswordSubmit()">Unlock</button>
+      <button onclick="closePasswordModal()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-content" id="trackerPanel">
+    <h2>Run Tracker</h2>
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar">0.00 / 100 km</div>
+    </div>
+    <button class="goal-button" id="goalDisplay" disabled>🎯 Goal: 100 km</button>
+    <input type="number" id="goalInput" placeholder="Set Run Goal (km)" />
+    <button class="km-btn" onclick="updateRunGoal()">➕ KM</button>
+    <input type="number" id="distanceInput" placeholder="Enter Run distance (km)" />
+    <button class="add-btn" onclick="addRunDistance()">Add Run</button>
+    <button class="reset-btn" onclick="resetRunProgress()">Reset Run</button>
+    <input type="date" id="dueDateInput" onchange="setDueDate()" />
+    <p id="dueDateDisplay"></p>
+    <p id="countdownDisplay"></p>
+    <div id="details"></div>
+    <div id="history"></div>
+
+    <hr />
+    <h2>Cycle Tracker</h2>
+    <div class="progress-container">
+      <div class="progress-bar" id="cycleProgressBar">
+        0.00 / 100 km
+      </div>
+    </div>
+    <button class="goal-button" id="cycleGoalDisplay" disabled>
+      🎯 Goal: 100 km
+    </button>
+    <input type="number" id="cycleGoalInput" placeholder="Set Cycle Goal (km)" />
+    <button class="km-btn" onclick="updateCycleGoal()">➕ KM</button>
+    <input type="number" id="cycleDistanceInput" placeholder="Enter Cycle distance (km)" />
+    <button class="add-btn" onclick="addCycleDistance()">Add Cycle</button>
+    <button class="reset-btn" onclick="resetCycleProgress()">
+      Reset Cycle
+    </button>
+    <input type="date" id="cycleDueDateInput" onchange="setCycleDueDate()" />
+    <p id="cycleDueDateDisplay"></p>
+    <p id="cycleCountdownDisplay"></p>
+    <div id="cycleHistory"></div>
+  </div>
+
+  <script>
+    const RUN_STORAGE_KEY = "runDistances";
+    const RUN_DUE_DATE_KEY = "runDueDate";
+    const RUN_GOAL_KEY = "runGoal";
+
+    const CYCLE_STORAGE_KEY = "cycleDistances";
+    const CYCLE_GOAL_KEY = "cycleGoal";
+    const CYCLE_DUE_DATE_KEY = "cycleDueDate"; // New key for cycle due date
+
+    const FIXED_PASSWORD = "32e5a5bb8989f9b6b8adaae394ad59c9464f096704876cde7ebfde1704bd8a67"; // Hashed "please"
+
+    let isUnlocked = false;
+
+    let runDistances = [];
+    let totalRunGoal = parseFloat(localStorage.getItem(RUN_GOAL_KEY)) || 100;
+
+    let cycleDistances = [];
+    let totalCycleGoal = parseFloat(localStorage.getItem(CYCLE_GOAL_KEY)) || 100;
+
+    const passwordModal = document.getElementById("passwordModal");
+    const trackerPanel = document.getElementById("trackerPanel");
+    const passwordInput = document.getElementById("passwordInput");
+    const miniProgressBarsWrapper = document.getElementById("miniProgressBarsWrapper");
+
+
+    async function hashPassword(password) {
+      const textEncoder = new TextEncoder();
+      const data = textEncoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashedPassword;
+    }
+
+    async function handlePasswordSubmit() {
+      const enteredPassword = passwordInput.value;
+      const hashedEnteredPassword = await hashPassword(enteredPassword);
+
+      if (hashedEnteredPassword === FIXED_PASSWORD) {
+        isUnlocked = true;
+        trackerPanel.classList.add("show");
+        passwordModal.style.display = "none";
+        miniProgressBarsWrapper.style.display = "none"; // Hide both mini bars when main panel is open
+      } else {
+        alert("❌ Incorrect password!");
+        passwordInput.value = "";
+      }
+    }
+
+    document.getElementById("toggleRunBtn").addEventListener("click", () => {
+      if (isUnlocked) {
+        trackerPanel.classList.toggle("show");
+        if (trackerPanel.classList.contains("show")) {
+          miniProgressBarsWrapper.style.display = "none"; // Hide when panel is open
+        } else {
+          miniProgressBarsWrapper.style.display = "flex"; // Show both when panel is closed
+        }
+        return;
+      }
+      passwordInput.value = "";
+      passwordModal.style.display = "flex";
+    });
+
+    function closePasswordModal() {
+      passwordModal.style.display = "none";
+    }
+
+    // --- Run Tracker Functions ---
+    function updateRunGoal() {
+      const goalInput = document.getElementById("goalInput");
+      const value = parseFloat(goalInput.value);
+      if (!isNaN(value) && value > 0) {
+        totalRunGoal = value;
+        localStorage.setItem(RUN_GOAL_KEY, totalRunGoal);
+        updateRunGoalDisplay();
+        updateRunProgress();
+        goalInput.value = "";
+      }
+    }
+
+    function updateRunGoalDisplay() {
+      document.getElementById("goalDisplay").textContent = `🎯 Goal: ${totalRunGoal} km`;
+    }
+
+    function addRunDistance() {
+      const input = document.getElementById("distanceInput");
+      const value = parseFloat(input.value);
+      if (!isNaN(value) && value > 0) {
+        runDistances.push({
+          distance: value,
+          date: new Date().toISOString()
+        });
+        saveRunData();
+        updateRunProgress();
+        input.value = "";
+      }
+    }
+
+    function resetRunProgress() {
+      if (confirm("Reset all run progress?")) {
+        runDistances = [];
+        localStorage.removeItem(RUN_STORAGE_KEY);
+        updateRunProgress();
+      }
+    }
+
+    function setDueDate() {
+      const input = document.getElementById("dueDateInput").value;
+      if (input) {
+        localStorage.setItem(RUN_DUE_DATE_KEY, input);
+        showDueDate(input, "dueDateDisplay", "countdownDisplay");
+      }
+    }
+
+    function formatDateUK(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    function showDueDate(dateStr, displayId, countdownId) {
+      const display = document.getElementById(displayId);
+      const countdown = document.getElementById(countdownId);
+
+      const dueDate = new Date(dateStr);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+      display.innerHTML = `📅 <span style="color:#d32f2f;">Due:</span> <span style="color:#6a1b9a;">${formatDateUK(dateStr)}</span>`;
+
+      if (diffDays > 0) {
+        countdown.innerHTML = `⏳ <b>${diffDays} day(s)</b> remaining`;
+      } else if (diffDays === 0) {
+        countdown.innerHTML = `🚨 <span style="color:#ff9800;">Today!</span>`;
+      } else {
+        countdown.innerHTML = `❗ <span style="color:red;">${Math.abs(diffDays)} day(s) late</span>`;
+      }
+    }
+
+    function updateRunProgress() {
+      const total = runDistances.reduce((sum, e) => sum + e.distance, 0);
+      const percent = Math.min((total / totalRunGoal) * 100, 100);
+      const barText = `${total.toFixed(2)} / ${totalRunGoal} km`;
+
+      document.getElementById("progressBar").style.width = percent + "%";
+      document.getElementById("progressBar").textContent = ` ${barText}`; // Added emojis for main bar
+
+      const miniBar = document.getElementById("miniProgressBar");
+      if (miniBar) {
+        miniBar.style.width = percent + "%";
+        miniBar.textContent = barText; // No emojis for mini bar for brevity
+      }
+
+      document.getElementById("details").innerHTML =
+        `✅ ${total.toFixed(2)} km | 🔻 ${(totalRunGoal - total).toFixed(2)} km`;
+
+      document.getElementById("history").innerHTML = runDistances.map((d, i) => `
+        <div class="run-entry" id="runEntry${i}">
+          <div>
+            <b>Run ${i + 1}:</b>
+            <span style="color:#3f51b5;">${d.distance.toFixed(2)} km</span>
+            <span class="hover-date">${formatDateUK(d.date)}</span>
+          </div>
+          <div>
+            <button class="edit-btn" onclick="showEditRunDate(${i})">✏️</button>
+            <button class="delete-btn" onclick="deleteRun(${i})">🗑️</button>
+          </div>
+        </div>
+        <div class="edit-date-container" id="editRunDate${i}" style="display:none;">
+          <input type="date" id="newRunDateInput${i}" value="${d.date.split('T')[0]}" />
+          <button class="km-btn" onclick="applyEditRunDate(${i})">Save</button>
+        </div>
+      `).join("");
+    }
+
+    function showEditRunDate(index) {
+      document.getElementById(`editRunDate${index}`).style.display = 'block';
+    }
+
+    function applyEditRunDate(index) {
+      const newDate = document.getElementById(`newRunDateInput${index}`).value;
+      if (newDate) {
+        runDistances[index].date = newDate;
+        saveRunData();
+        updateRunProgress();
+      }
+    }
+
+    function deleteRun(index) {
+      if (confirm("Delete this run?")) {
+        runDistances.splice(index, 1);
+        saveRunData();
+        updateRunProgress();
+      }
+    }
+
+    function saveRunData() {
+      localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(runDistances));
+    }
+
+
+    // --- Cycle Tracker Functions ---
+    function updateCycleGoal() {
+      const goalInput = document.getElementById("cycleGoalInput");
+      const value = parseFloat(goalInput.value);
+      if (!isNaN(value) && value > 0) {
+        totalCycleGoal = value;
+        localStorage.setItem(CYCLE_GOAL_KEY, totalCycleGoal);
+        updateCycleGoalDisplay();
+        updateCycleProgress();
+        goalInput.value = "";
+      }
+    }
+
+    function updateCycleGoalDisplay() {
+      document.getElementById("cycleGoalDisplay").textContent = `🎯 Goal: ${totalCycleGoal} km`;
+    }
+
+    function addCycleDistance() {
+      const input = document.getElementById("cycleDistanceInput");
+      const value = parseFloat(input.value);
+      if (!isNaN(value) && value > 0) {
+        cycleDistances.push({
+          distance: value,
+          date: new Date().toISOString()
+        });
+        saveCycleData();
+        updateCycleProgress();
+        input.value = "";
+      }
+    }
+
+    function resetCycleProgress() {
+      if (confirm("Reset all cycle progress?")) {
+        cycleDistances = [];
+        localStorage.removeItem(CYCLE_STORAGE_KEY);
+        updateCycleProgress();
+      }
+    }
+
+    // New functions for Cycle Due Date
+    function setCycleDueDate() {
+      const input = document.getElementById("cycleDueDateInput").value;
+      if (input) {
+        localStorage.setItem(CYCLE_DUE_DATE_KEY, input);
+        showDueDate(input, "cycleDueDateDisplay", "cycleCountdownDisplay");
+      }
+    }
+
+    function updateCycleProgress() {
+      const total = cycleDistances.reduce((sum, e) => sum + e.distance, 0);
+      const percent = Math.min((total / totalCycleGoal) * 100, 100);
+      const barText = `${total.toFixed(2)} / ${totalCycleGoal} km`;
+
+      document.getElementById("cycleProgressBar").style.width = percent + "%";
+      document.getElementById("cycleProgressBar").textContent = ` ${barText}`; // Added emoji for main cycle bar
+
+      const miniCycleBar = document.getElementById("miniCycleProgressBar");
+      if (miniCycleBar) {
+        miniCycleBar.style.width = percent + "%";
+        miniCycleBar.textContent = barText; // No emoji for mini bar for brevity
+      }
+      // Note: No dedicated 'cycleDetails' or 'cycleCountdownDisplay' in the current HTML.
+      // If needed, you'd add elements like those.
+      document.getElementById("cycleHistory").innerHTML = cycleDistances.map((d, i) => `
+        <div class="run-entry" id="cycleEntry${i}">
+          <div>
+            <b>Ride ${i + 1}:</b>
+            <span style="color:#e91e63;">${d.distance.toFixed(2)} km</span>
+            <span class="hover-date">${formatDateUK(d.date)}</span>
+          </div>
+          <div>
+            <button class="edit-btn" onclick="showEditCycleDate(${i})">✏️</button>
+            <button class="delete-btn" onclick="deleteCycle(${i})">🗑️</button>
+          </div>
+        </div>
+        <div class="edit-date-container" id="editCycleDate${i}" style="display:none;">
+          <input type="date" id="newCycleDateInput${i}" value="${d.date.split('T')[0]}" />
+          <button class="km-btn" onclick="applyEditCycleDate(${i})">Save</button>
+        </div>
+      `).join("");
+    }
+
+    function showEditCycleDate(index) {
+      document.getElementById(`editCycleDate${index}`).style.display = 'block';
+    }
+
+    function applyEditCycleDate(index) {
+      const newDate = document.getElementById(`newCycleDateInput${index}`).value;
+      if (newDate) {
+        cycleDistances[index].date = newDate;
+        saveCycleData();
+        updateCycleProgress();
+      }
+    }
+
+    function deleteCycle(index) {
+      if (confirm("Delete this cycle ride?")) {
+        cycleDistances.splice(index, 1);
+        saveCycleData();
+        updateCycleProgress();
+      }
+    }
+
+    function saveCycleData() {
+      localStorage.setItem(CYCLE_STORAGE_KEY, JSON.stringify(cycleDistances));
+    }
+
+
+    // --- Load Data and Initial Render ---
+    function loadSavedData() {
+      const savedRun = localStorage.getItem(RUN_STORAGE_KEY);
+      if (savedRun) runDistances = JSON.parse(savedRun);
+
+      const savedRunDate = localStorage.getItem(RUN_DUE_DATE_KEY);
+      if (savedRunDate) {
+        document.getElementById("dueDateInput").value = savedRunDate;
+        showDueDate(savedRunDate, "dueDateDisplay", "countdownDisplay");
+      }
+
+      const savedRunGoal = localStorage.getItem(RUN_GOAL_KEY);
+      if (savedRunGoal) totalRunGoal = parseFloat(savedRunGoal);
+
+      const savedCycle = localStorage.getItem(CYCLE_STORAGE_KEY);
+      if (savedCycle) cycleDistances = JSON.parse(savedCycle);
+
+      const savedCycleGoal = localStorage.getItem(CYCLE_GOAL_KEY);
+      if (savedCycleGoal) totalCycleGoal = parseFloat(savedCycleGoal);
+
+      // Load Cycle Due Date
+      const savedCycleDueDate = localStorage.getItem(CYCLE_DUE_DATE_KEY);
+      if (savedCycleDueDate) {
+        document.getElementById("cycleDueDateInput").value = savedCycleDueDate;
+        showDueDate(savedCycleDueDate, "cycleDueDateDisplay", "cycleCountdownDisplay");
+      }
+
+
+      updateRunGoalDisplay();
+      updateCycleGoalDisplay();
+    }
+
+    loadSavedData();
+    updateRunProgress();
+    updateCycleProgress(); // Initial update for cycle progress
+
+    // Ensure both mini progress bars are visible initially
+    miniProgressBarsWrapper.style.display = "flex";
+  </script>
+</div>

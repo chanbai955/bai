@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chan Calculate</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column; /* Changed to column to stack title and calculator */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #e0e0e0; /* Lighter background for better 3D effect */
+            margin: 0;
+            perspective: 1000px; /* For 3D transformations */
+        }
+
+        .calculator-title {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Simple shadow for a lifted look */
+            letter-spacing: 2px;
+            /* Basic 3D text effect */
+            transform-style: preserve-3d;
+            animation: bounceIn 1s ease-out; /* Add an animation */
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5) translateY(-50px); opacity: 0; }
+            50% { transform: scale(1.1) translateY(10px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .calculator {
+            border: 1px solid #b0b0b0;
+            border-radius: 12px; /* Slightly more rounded */
+            box-shadow:
+                -7px -7px 15px rgba(255, 255, 255, 0.7), /* Top-left highlight */
+                7px 7px 15px rgba(0, 0, 0, 0.15),      /* Bottom-right shadow */
+                inset 2px 2px 5px rgba(255, 255, 255, 0.5), /* Inner highlight */
+                inset -2px -2px 5px rgba(0, 0, 0, 0.1);    /* Inner shadow */
+            width: 320px; /* Slightly wider */
+            background-color: #f0f0f0; /* Softer background */
+            padding: 25px; /* More padding */
+            transform: rotateX(5deg) rotateY(-5deg); /* Slight initial 3D rotation */
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .calculator:hover {
+            transform: rotateX(0deg) rotateY(0deg); /* Flatten on hover */
+        }
+
+        .display {
+            width: 100%;
+            height: 60px; /* Taller display */
+            text-align: right;
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 2.5em; /* Larger font */
+            border: none; /* Remove default border */
+            border-radius: 8px; /* More rounded display */
+            box-sizing: border-box;
+            background-color: #c9d0d9; /* Darker display background */
+            color: #333;
+            box-shadow:
+                inset 2px 2px 5px rgba(0, 0, 0, 0.1), /* Inner shadow for depth */
+                inset -2px -2px 5px rgba(255, 255, 255, 0.8); /* Inner highlight */
+            overflow: hidden;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px; /* Larger gap */
+        }
+
+        .button {
+            width: 100%;
+            padding: 18px; /* More padding */
+            font-size: 1.5em; /* Larger font */
+            border: none;
+            border-radius: 8px; /* More rounded buttons */
+            cursor: pointer;
+            background-color: #e0e0e0;
+            box-shadow:
+                3px 3px 6px rgba(0, 0, 0, 0.1), /* Outer shadow */
+                -3px -3px 6px rgba(255, 255, 255, 0.7); /* Outer highlight */
+            transition: all 0.15s ease-in-out;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            box-shadow:
+                1px 1px 3px rgba(0, 0, 0, 0.1), /* Smaller outer shadow on hover */
+                -1px -1px 3px rgba(255, 255, 255, 0.7); /* Smaller outer highlight */
+            transform: translateY(1px); /* Slight press effect */
+        }
+
+        .button:active {
+            box-shadow:
+                inset 2px 2px 5px rgba(0, 0, 0, 0.2), /* Inner shadow on press */
+                inset -2px -2px 5px rgba(255, 255, 255, 0.5); /* Inner highlight on press */
+            transform: translateY(2px); /* More pronounced press */
+            background-color: #d0d0d0;
+        }
+
+        .button.operator {
+            background-color: #ff9500;
+            color: white;
+            box-shadow:
+                3px 3px 6px rgba(0, 0, 0, 0.2),
+                -3px -3px 6px rgba(255, 255, 255, 0.7);
+        }
+
+        .button.operator:hover {
+            background-color: #e68a00;
+        }
+
+        .button.clear, .button.equals {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow:
+                3px 3px 6px rgba(0, 0, 0, 0.2),
+                -3px -3px 6px rgba(255, 255, 255, 0.7);
+        }
+
+        .button.clear:hover, .button.equals:hover {
+            background-color: #45a049;
+        }
+
+        /* --- CHANGE MADE HERE --- */
+        .button.backspace {
+            background-color: #f44336; /* Red for backspace */
+            color: white;
+            font-size: 2.0em; /* Increased font size for a bigger arrow */
+        }
+
+        .button.backspace:hover {
+            background-color: #da190b;
+        }
+
+        .button.equals {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="calculator-title">Chan Calculate</h1>
+
+    <div class="calculator">
+        <input type="text" class="display" id="display" disabled>
+        <div class="buttons">
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button backspace" onclick="backspace()">&#x2190;</button> <button class="button operator" onclick="appendToDisplay('/')">/</button>
+            <button class="button operator" onclick="appendToDisplay('*')">*</button>
+
+            <button class="button" onclick="appendToDisplay('7')">7</button>
+            <button class="button" onclick="appendToDisplay('8')">8</button>
+            <button class="button" onclick="appendToDisplay('9')">9</button>
+            <button class="button operator" onclick="appendToDisplay('-')">-</button>
+
+
+            <button class="button" onclick="appendToDisplay('4')">4</button>
+            <button class="button" onclick="appendToDisplay('5')">5</button>
+            <button class="button" onclick="appendToDisplay('6')">6</button>
+            <button class="button operator" onclick="appendToDisplay('+')">+</button>
+
+            <button class="button" onclick="appendToDisplay('1')">1</button>
+            <button class="button" onclick="appendToDisplay('2')">2</button>
+            <button class="button" onclick="appendToDisplay('3')">3</button>
+            <button class="button equals" onclick="calculateResult()">=</button>
+
+            <button class="button" onclick="appendToDisplay('0')">0</button>
+            <button class="button" onclick="appendToDisplay('.')">.</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        let currentInput = '';
+
+        function appendToDisplay(value) {
+            // Prevent multiple decimals
+            if (value === '.' && currentInput.includes('.')) {
+                return;
+            }
+            // Basic check to prevent multiple operators next to each other
+            const lastChar = currentInput.slice(-1);
+            const operators = ['+', '-', '*', '/'];
+            if (operators.includes(value) && operators.includes(lastChar)) {
+                // Replace the last operator if a new one is typed
+                currentInput = currentInput.slice(0, -1) + value;
+            } else {
+                currentInput += value;
+            }
+            display.value = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            display.value = '';
+        }
+
+        function backspace() {
+            currentInput = currentInput.slice(0, -1); // Remove the last character
+            display.value = currentInput;
+        }
+
+        function calculateResult() {
+            try {
+                // Use Function constructor for safe evaluation
+                // Basic validation: prevent calculation if input is empty or ends with operator
+                const lastChar = currentInput.slice(-1);
+                const operators = ['+', '-', '*', '/'];
+                if (currentInput === '' || operators.includes(lastChar)) {
+                    display.value = 'Error';
+                    currentInput = '';
+                    return;
+                }
+
+                currentInput = String(new Function('return ' + currentInput)());
+                display.value = currentInput;
+            } catch (error) {
+                display.value = 'Error';
+                currentInput = '';
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CukaiTaksiranKu - Assessment Tax Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .screen {
+            display: none; /* Hidden by default */
+        }
+        .screen.active {
+            display: block; /* Shown when active */
+        }
+        .button-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.red {
+            background-color: #dc3545;
+        }
+        button.red:hover {
+            background-color: #c82333;
+        }
+        button.green {
+            background-color: #28a745;
+        }
+        button.green:hover {
+            background-color: #218838;
+        }
+        /* Styles for the individual property items in the list */
+        .property-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack info and buttons vertically */
+            gap: 8px; /* Space between info and buttons */
+        }
+        .property-item-info {
+            flex-grow: 1; /* Allows info to take available space */
+            cursor: pointer; /* Still clickable for details screen */
+            padding-bottom: 5px; /* Little padding above buttons */
+        }
+        .property-item-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end; /* Align buttons to the right */
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+            margin-top: 5px;
+        }
+        .property-item-actions button {
+            padding: 5px 10px; /* Smaller buttons */
+            font-size: 0.9em;
+            margin: 0; /* Remove extra margin */
+        }
+
+        /* Status-specific background and border */
+        .property-item.paid {
+            background-color: #e8f5e9; /* Very light green */
+            border-color: #c8e6c9; /* Light green border */
+        }
+        .property-item.pending {
+            background-color: #e3f2fd; /* Light blue */
+            border-color: #90caf9; /* Blue border */
+        }
+        /* Status text specific styling within the item */
+        .property-item strong {
+            color: #0056b3; /* Default text color for property name */
+        }
+        .property-item.paid strong {
+            color: #2e7d32; /* Darker green for paid name */
+        }
+        .property-item.pending strong {
+            color: #1976d2; /* Darker blue for pending name */
+        }
+        .property-item .status-text.paid-text {
+            color: #28a745; /* Green for "Paid" text */
+            font-weight: bold;
+        }
+        .property-item .status-text.pending-text {
+            color: #007bff; /* Blue for "Pending" text */
+            font-weight: bold;
+        }
+        /* End of property-item specific styles */
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        /* Style for read-only inputs */
+        input[readonly] {
+            background-color: #e9ecef; /* Light gray background */
+            cursor: not-allowed; /* Indicate it's not editable */
+        }
+        .detail-field {
+            margin-bottom: 10px;
+        }
+        .detail-field strong {
+            display: inline-block;
+            width: 120px;
+            color: #0056b3;
+        }
+        /* Styling for Next Payment Due */
+        .detail-field.next-payment-info {
+            font-weight: bold;
+            color: #8a6d3b; /* A subtle warning/info color */
+            border-top: 1px dashed #ddd;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .detail-field.next-payment-info strong {
+            color: #5e4726; /* Darker color for label */
+        }
+
+
+        #statusToggle {
+            margin-top: 5px;
+        }
+        .summary {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #0056b3;
+            display: flex; /* Added flexbox */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            gap: 10px; /* Space between text and icon */
+        }
+        .summary img { /* Style for the new icon */
+            width: 24px; /* Adjust size as needed */
+            height: 24px;
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        .receipt-btn-group {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            text-align: center;
+            display: flex; /* Use flexbox for button alignment */
+            justify-content: center;
+            align-items: center;
+            gap: 10px; /* Space between buttons and input */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .receipt-btn-group button {
+            background-color: #6c757d;
+        }
+        .receipt-btn-group button:hover {
+            background-color: #5a6268;
+        }
+        /* Style for hidden file input */
+        .receipt-btn-group input[type="file"] {
+            display: none; /* Hide the default file input */
+        }
+        /* Style for custom upload button */
+        .receipt-btn-group label.upload-button {
+            background-color: #ffc107; /* Yellowish color for upload */
+            color: #333;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            display: inline-block; /* Make label behave like a button */
+        }
+        .receipt-btn-group label.upload-button:hover {
+            background-color: #e0a800;
+        }
+
+
+        /* New styles for specific council link */
+        .specific-council-link-display {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        .specific-council-link-display p {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .specific-council-link-display a {
+            display: inline-block;
+            margin: 0 8px;
+            color: #007bff;
+            text-decoration: none;
+            padding: 5px 8px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .specific-council-link-display a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Styles for the delete icon next to uploaded file name */
+        .uploaded-file-display {
+            display: flex; /* To align filename and icon */
+            justify-content: center;
+            align-items: center;
+            gap: 5px; /* Space between text and icon */
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #555;
+            font-weight: normal; /* Default */
+        }
+
+        .uploaded-file-display.attached {
+            font-weight: bold;
+            color: #28a745; /* Green for attached file */
+        }
+        .uploaded-file-display .view-link {
+            color: #007bff; /* Blue for the view link */
+            text-decoration: underline;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .uploaded-file-display .view-link:hover {
+            color: #0056b3;
+        }
+
+
+        .delete-receipt-icon {
+            cursor: pointer;
+            color: #dc3545; /* Red color for delete */
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .delete-receipt-icon:hover {
+            background-color: #f8d7da; /* Light red background on hover */
+        }
+
+        /* Styling for the next payment month/year group */
+        .next-payment-period-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .next-payment-period-group select,
+        .next-payment-period-group input {
+            width: auto; /* Allow auto width for smaller inputs */
+            flex: 1; /* Distribute space */
+            margin-bottom: 0; /* Remove default margin-bottom */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CukaiTaksiran</h1>
+
+        <div id="homeScreen" class="screen active">
+            <h2>@ Properties-ku</h2>
+            <div class="summary" id="summaryView">
+                </div>
+            <div class="button-group">
+                <button onclick="showScreen('addEditScreen', 'new')">Add New Property</button>
+                <button onclick="downloadSummaryPdf()" style="background-color: #6c757d;">
+                    <img src="image_ed85bb.png" alt="Save " style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+                    
+                </button>
+            </div>
+            <div id="propertyList">
+                </div>
+        </div>
+
+        <div id="addEditScreen" class="screen">
+            <h2 id="addEditTitle">Add New Property</h2>
+            <form id="propertyForm">
+                <input type="hidden" id="propertyIndex">
+                
+                <label for="propertyName">Name:</label>
+                <input type="text" id="propertyName" placeholder="e.g., My House, Shop Lot A" required>
+
+                <label for="accNo">Account Number (Acc No):</label>
+                <input type="text" id="accNo" required>
+
+                <label for="council">Council:</label>
+                <select id="council" required>
+                    <option value="">-- Select Council --</option>
+                    <option value="MBPJ">Majlis Bandaraya Petaling Jaya (MBPJ)</option>
+                    <option value="MBSA">Majlis Bandaraya Shah Alam (MBSA)</option>
+                    <option value="MPSJ">Majlis Perbandaran Subang Jaya (MPSJ)</option>
+                    <option value="DBKL">Dewan Bandaraya Kuala Lumpur (DBKL)</option>
+                    <option value="MPS">Majlis Perbandaran Selayang (MPS)</option>
+                    </select>
+
+                <label for="amount">Amount (RM):</label>
+                <input type="number" id="amount" step="0.01" required>
+
+                <label for="duration">Duration:</label>
+                <select id="duration" required>
+                    <option value="Jan-Jun">Jan-Jun</option>
+                    <option value="Jul-Dec">Jul-Dec</option>
+                </select>
+
+                <label for="year">Year:</label>
+                <input type="number" id="year" value="2025" min="1900" max="2100" required>
+
+                <label>Status:</label>
+                <input type="radio" id="statusPending" name="status" value="Pending" checked>
+                <label for="statusPending" style="display: inline-block; margin-right: 10px;">Pending</label>
+                <input type="radio" id="statusPaid" name="status" value="Paid">
+                <label for="statusPaid" style="display: inline-block;">Paid</label>
+                
+                <div id="paymentDateGroup" style="display: none;">
+                    <label for="paymentDate">Payment Date:</label>
+                    <input type="date" id="paymentDate">
+                </div>
+
+                <label for="receiptId">Receipt/Transaction ID (Optional):</label>
+                <input type="text" id="receiptId">
+
+                <hr style="margin-top: 20px; border-style: dashed; border-width: 1px 0 0 0; border-color: #ddd;">
+                <h3 style="text-align: center; color: #0056b3;">Next Payment Details</h3>
+                
+                <label for="nextPaymentMonth">Next Payment Month:</label>
+                <select id="nextPaymentMonth" required>
+                    <option value="">-- Select Month --</option>
+                    <option value="Jan">Jan</option>
+                    <option value="Feb">Feb</option>
+                    <option value="Mar">Mar</option>
+                    <option value="Apr">Apr</option>
+                    <option value="May">May</option>
+                    <option value="Jun">Jun</option>
+                    <option value="Jul">Jul</option>
+                    <option value="Aug">Aug</option>
+                    <option value="Sep">Sep</option>
+                    <option value="Oct">Oct</option>
+                    <option value="Nov">Nov</option>
+                    <option value="Dec">Dec</option>
+                </select>
+
+                <label for="nextPaymentYear">Next Payment Year:</label>
+                <input type="number" id="nextPaymentYear" value="2026" min="2025" max="2100" required>
+
+                <div class="button-group">
+                    <button type="submit">Save Property</button>
+                    <button type="button" onclick="showScreen('homeScreen')">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="propertyDetailsScreen" class="screen">
+            <h2>Property Details</h2>
+            <div id="detailsDisplay">
+                <div class="detail-field"><strong>Name:</strong> <span id="detailName"></span></div>
+                <div class="detail-field"><strong>Acc No:</strong> <span id="detailAccNo"></span></div>
+                <div class="detail-field"><strong>Council:</strong> <span id="detailCouncil"></span></div>
+                <div class="detail-field"><strong>Amount:</strong> RM <span id="detailAmount"></span></div>
+                <div class="detail-field"><strong>Duration:</strong> <span id="detailDuration"></span></div>
+                <div class="detail-field"><strong>Year:</strong> <span id="detailYear"></span></div>
+                <div class="detail-field"><strong>Status:</strong> <span id="detailStatus"></span></div>
+                <div class="detail-field" id="detailPaymentDateGroup"><strong>Paid On:</strong> <span id="detailPaymentDate"></span></div>
+                <div class="detail-field" id="detailReceiptIdGroup"><strong>Receipt ID:</strong> <span id="detailReceiptId"></span></div>
+                <div class="detail-field next-payment-info"><strong>Next Payment Due:</strong> <span id="detailNextPaymentDue"></span></div>
+            </div>
+
+            <div id="specificCouncilLinkDisplay" class="specific-council-link-display">
+                </div>
+
+            <div class="button-group">
+                <button id="editPropertyBtn" onclick="editCurrentProperty()">Edit</button>
+                <button id="markAsPaidBtn" onclick="markCurrentPropertyAsPaid()">Mark as Paid</button>
+                <button class="red" onclick="deleteCurrentProperty()">Delete</button>
+                <button onclick="showScreen('homeScreen')">Back to List</button>
+            </div>
+            
+            <div class="receipt-btn-group" id="downloadReceiptGroup">
+                <button class="green" onclick="downloadPdfReceipt()">Download Receipt </button>
+                
+                <input type="file" id="uploadReceiptInput" accept=".pdf" style="display: none;">
+                <label for="uploadReceiptInput" class="upload-button">Upload Bill</label>
+            </div>
+            
+            <div id="uploadedReceiptFileName" class="uploaded-file-display">
+                </div>
+
+        </div>
+
+        <div id="settingsAboutScreen" class="screen">
+            <h2>Settings & About</h2>
+            <p>This is a simple Cukai Taksiran tracking app.</p>
+            <p>Version 1.0</p>
+            <div class="button-group">
+                <button onclick="showScreen('homeScreen')">Back to Home</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Ensure that jspdf is loaded globally before our script runs
+        const { jsPDF } = window.jspdf;
+
+        let properties = []; // This will store our property data
+        let currentPropertyIndex = -1; // To keep track of the property being viewed/edited
+
+        // Define a maximum file size for Base64 storage in localStorage (e.g., 2MB)
+        const MAX_UPLOAD_SIZE_MB = 2;
+        const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024; // 2MB in bytes
+
+        // Helper function to convert Base64 to Blob
+        function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+
+            const blob = new Blob(byteArrays, { type: contentType });
+            return blob;
+        }
+
+        // Council URL Mapping
+        const COUNCIL_URLS = {
+            "MBPJ": { name: "MBPJ (Petaling Jaya)", url: "https://www.mbpj.gov.my/" },
+            "MBSA": { name: "MBSA (Shah Alam)", url: "https://www.mymbsa.gov.my/" },
+            "MPSJ": { name: "MPSJ (Subang Jaya)", url: "https://www.mpsj.gov.my/" },
+            "DBKL": { name: "DBKL (Kuala Lumpur)", url: "https://www.dbkl.gov.my/en/cukai-taksiran/" }, 
+            "MPS": { name: "MPS (Selayang)", url: "https://mymps.mps.gov.my/" } 
+            // Add more councils as needed
+        };
+
+        // Load properties from localStorage on app start
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedProperties = localStorage.getItem('cukaiTaksiranProperties');
+            if (storedProperties) {
+                properties = JSON.parse(storedProperties);
+            }
+            renderProperties();
+            updateSummary();
+
+            // Add event listener for status radio buttons to show/hide payment date
+            document.getElementById('statusPaid').addEventListener('change', togglePaymentDateInput);
+            document.getElementById('statusPending').addEventListener('change', togglePaymentDateInput);
+
+            // Add event listener for the hidden file input
+            document.getElementById('uploadReceiptInput').addEventListener('change', handleReceiptUpload);
+        });
+
+        function saveProperties() {
+            localStorage.setItem('cukaiTaksiranProperties', JSON.stringify(properties));
+        }
+
+        function showScreen(screenId, mode = 'view', index = -1) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+
+            if (screenId === 'addEditScreen') {
+                const form = document.getElementById('propertyForm');
+                form.reset(); // Clear form
+                document.getElementById('propertyIndex').value = '';
+                document.getElementById('addEditTitle').textContent = 'Add New Property';
+                document.getElementById('statusPending').checked = true; // Default to Pending
+                document.getElementById('paymentDateGroup').style.display = 'none'; // Hide payment date initially
+
+                // Get the input fields for name, accNo, council, and NEXT PAYMENT
+                const propertyNameInput = document.getElementById('propertyName');
+                const accNoInput = document.getElementById('accNo');
+                const councilSelect = document.getElementById('council');
+                const nextPaymentMonthSelect = document.getElementById('nextPaymentMonth');
+                const nextPaymentYearInput = document.getElementById('nextPaymentYear');
+
+
+                if (mode === 'edit' && index !== -1) {
+                    currentPropertyIndex = index;
+                    const prop = properties[index];
+                    document.getElementById('addEditTitle').textContent = 'Edit Property';
+                    document.getElementById('propertyIndex').value = index;
+                    
+                    // Set values
+                    propertyNameInput.value = prop.name;
+                    accNoInput.value = prop.accNo;
+                    councilSelect.value = prop.council || '';
+                    nextPaymentMonthSelect.value = prop.nextPaymentMonth || ''; // Set next payment month
+                    nextPaymentYearInput.value = prop.nextPaymentYear || ''; // Set next payment year
+
+
+                    // Make name, accNo, and council read-only when editing
+                    propertyNameInput.readOnly = true;
+                    accNoInput.readOnly = true;
+                    councilSelect.disabled = true;
+                    
+                    propertyNameInput.classList.add('readonly-input');
+                    accNoInput.classList.add('readonly-input');
+                    councilSelect.classList.add('readonly-input');
+
+
+                    document.getElementById('amount').value = prop.amount;
+                    document.getElementById('duration').value = prop.duration;
+                    document.getElementById('year').value = prop.year;
+                    if (prop.status === 'Paid') {
+                        document.getElementById('statusPaid').checked = true;
+                        document.getElementById('paymentDate').value = prop.paymentDate || '';
+                        document.getElementById('receiptId').value = prop.receiptId || '';
+                        document.getElementById('paymentDateGroup').style.display = 'block';
+                    } else {
+                        document.getElementById('statusPending').checked = true;
+                        document.getElementById('paymentDateGroup').style.display = 'none';
+                    }
+                } else {
+                    // When adding a new property, ensure fields are editable
+                    propertyNameInput.readOnly = false;
+                    accNoInput.readOnly = false;
+                    councilSelect.disabled = false;
+                    
+                    propertyNameInput.classList.remove('readonly-input');
+                    accNoInput.classList.remove('readonly-input');
+                    councilSelect.classList.remove('readonly-input');
+                    councilSelect.value = ''; // Clear selection for new property
+                    
+                    // Default for next payment fields
+                    nextPaymentMonthSelect.value = 'Jan'; // Default to Jan
+                    nextPaymentYearInput.value = (new Date().getFullYear() + 1); // Default to next year
+                }
+            } else if (screenId === 'propertyDetailsScreen') {
+                displayPropertyDetails(index);
+            }
+            updateSummary();
+        }
+
+        function togglePaymentDateInput() {
+            const statusPaid = document.getElementById('statusPaid').checked;
+            document.getElementById('paymentDateGroup').style.display = statusPaid ? 'block' : 'none';
+            // If switching from Paid to Pending, clear payment date and receipt ID
+            if (!statusPaid) {
+                document.getElementById('paymentDate').value = '';
+                document.getElementById('receiptId').value = '';
+            }
+        }
+
+        document.getElementById('propertyForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const index = document.getElementById('propertyIndex').value;
+            const name = document.getElementById('propertyName').value; 
+            const accNo = document.getElementById('accNo').value;
+            const council = document.getElementById('council').value; 
+            const amount = parseFloat(document.getElementById('amount').value);
+            const duration = document.getElementById('duration').value;
+            const year = parseInt(document.getElementById('year').value);
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            const receiptId = document.getElementById('receiptId').value;
+            const nextPaymentMonth = document.getElementById('nextPaymentMonth').value; // NEW: Get next payment month
+            const nextPaymentYear = parseInt(document.getElementById('nextPaymentYear').value); // NEW: Get next payment year
+
+            const newProperty = {
+                name, 
+                accNo,
+                council, 
+                amount,
+                duration,
+                year,
+                status,
+                paymentDate: status === 'Paid' ? paymentDate : '',
+                receiptId: status === 'Paid' ? receiptId : '',
+                nextPaymentMonth, // NEW
+                nextPaymentYear,  // NEW
+                uploadedReceiptName: (index !== '' && properties[parseInt(index)].uploadedReceiptName && status === 'Paid') 
+                                        ? properties[parseInt(index)].uploadedReceiptName 
+                                        : '',
+                uploadedReceiptBase64: (index !== '' && properties[parseInt(index)].uploadedReceiptBase64 && status === 'Paid') 
+                                        ? properties[parseInt(index)].uploadedReceiptBase64 
+                                        : ''
+            };
+
+            if (index === '') {
+                // Add new property
+                properties.push(newProperty);
+            } else {
+                // Update existing property
+                properties[parseInt(index)] = newProperty;
+            }
+
+            saveProperties();
+            renderProperties();
+            showScreen('homeScreen');
+        });
+
+      function renderProperties() {
+    const propertyListDiv = document.getElementById('propertyList');
+    propertyListDiv.innerHTML = ''; // Clear existing list
+
+    if (properties.length === 0) {
+        propertyListDiv.innerHTML = '<p style="text-align: center; margin-top: 20px;">No properties added yet. Click "Add New Property" to get started!</p>';
+        return;
+    }
+
+    properties.forEach((prop, index) => {
+        const propDiv = document.createElement('div');
+        propDiv.classList.add('property-item');
+        if (prop.status === 'Paid') {
+            propDiv.classList.add('paid');
+        } else {
+            propDiv.classList.add('pending');
+        }
+
+        // Format payment date for display in the list, only if status is Paid
+        let paymentDateHtml = '';
+        if (prop.status === 'Paid' && prop.paymentDate) {
+            const [year, month, day] = prop.paymentDate.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day);
+            paymentDateHtml = `Paid On: ${dateObj.toLocaleDateString('en-GB')}<br>`;
+        }
+
+        // Create a div for info, clickable to go to details
+        const infoDiv = document.createElement('div');
+        infoDiv.classList.add('property-item-info');
+        infoDiv.innerHTML = `
+            <strong>${prop.name}</strong><br>
+            Acc No: ${prop.accNo}<br>
+            Council: ${COUNCIL_URLS[prop.council] ? COUNCIL_URLS[prop.council].name : 'N/A'}<br>
+            Amount: RM ${prop.amount.toFixed(2)}<br>
+            Duration: ${prop.duration} ${prop.year}<br>
+            Status: <span class="status-text ${prop.status.toLowerCase()}-text">${prop.status}</span><br>
+            ${paymentDateHtml} Next Due: <strong>${prop.nextPaymentMonth || 'N/A'} ${prop.nextPaymentYear || ''}</strong>
+        `;
+        infoDiv.onclick = (event) => {
+            // Only navigate to details if not clicking on edit/delete button (handled by stopPropagation)
+            if (!event.target.closest('.property-item-actions')) {
+                showScreen('propertyDetailsScreen', 'view', index);
+            }
+        };
+        propDiv.appendChild(infoDiv);
+
+        propertyListDiv.appendChild(propDiv);
+    });
+    updateSummary();
+}
+
+        // New function to handle deletion directly from the list (this function is no longer called from renderProperties)
+        function deletePropertyFromList(index) {
+            if (confirm('Are you sure you want to delete this property record?')) {
+                properties.splice(index, 1);
+                saveProperties();
+                renderProperties(); // Re-render the list
+            }
+        }
+
+
+        function updateSummary() {
+            let pendingCount = 0;
+            let totalDue = 0;
+
+            properties.forEach(prop => {
+                if (prop.status === 'Pending') {
+                    pendingCount++;
+                    totalDue += prop.amount;
+                }
+            });
+
+            const summaryView = document.getElementById('summaryView');
+            summaryView.innerHTML = `
+                You have <strong>${pendingCount} pending</strong> payments totaling <strong>RM ${totalDue.toFixed(2)}</strong>.
+            `;
+        }
+
+        function displayPropertyDetails(index) {
+            currentPropertyIndex = index;
+            const prop = properties[index];
+
+            document.getElementById('detailName').textContent = prop.name; 
+            document.getElementById('detailAccNo').textContent = prop.accNo;
+            document.getElementById('detailCouncil').textContent = COUNCIL_URLS[prop.council] ? COUNCIL_URLS[prop.council].name : 'N/A'; // Display Council Full Name
+
+            document.getElementById('detailAmount').textContent = prop.amount.toFixed(2);
+            document.getElementById('detailDuration').textContent = prop.duration;
+            document.getElementById('detailYear').textContent = prop.year;
+            document.getElementById('detailStatus').textContent = prop.status;
+
+            const paymentDateGroup = document.getElementById('detailPaymentDateGroup');
+            if (prop.paymentDate) {
+                const [year, month, day] = prop.paymentDate.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                document.getElementById('detailPaymentDate').textContent = dateObj.toLocaleDateString('en-GB');
+            } else {
+                document.getElementById('detailPaymentDate').textContent = 'N/A';
+            }
+            paymentDateGroup.style.display = 'block'; 
+
+            const receiptIdGroup = document.getElementById('detailReceiptIdGroup');
+            document.getElementById('detailReceiptId').textContent = prop.receiptId || 'N/A'; 
+            receiptIdGroup.style.display = 'block';
+
+            const markAsPaidBtn = document.getElementById('markAsPaidBtn');
+            const downloadReceiptGroup = document.getElementById('downloadReceiptGroup');
+            const uploadedReceiptFileNameDisplay = document.getElementById('uploadedReceiptFileName'); 
+
+            if (prop.status === 'Paid') {
+                markAsPaidBtn.style.display = 'none'; 
+                downloadReceiptGroup.style.display = 'flex'; 
+            } else {
+                markAsPaidBtn.style.display = 'inline-block'; 
+                downloadReceiptGroup.style.display = 'none'; 
+            }
+
+            uploadedReceiptFileNameDisplay.innerHTML = ''; 
+
+            if (prop.uploadedReceiptName && prop.uploadedReceiptBase64) {
+                uploadedReceiptFileNameDisplay.classList.add('attached');
+                uploadedReceiptFileNameDisplay.innerHTML = `
+                    Attached Receipt: <span class="view-link" onclick="viewUploadedPdf()"><u>${prop.uploadedReceiptName}</u></span>
+                    <span class="delete-receipt-icon" onclick="deleteUploadedReceipt()">✗</span>
+                `;
+            } else {
+                uploadedReceiptFileNameDisplay.classList.remove('attached');
+                uploadedReceiptFileNameDisplay.textContent = 'No PDF receipt attached.';
+            }
+
+            const specificCouncilLinkDisplay = document.getElementById('specificCouncilLinkDisplay');
+            specificCouncilLinkDisplay.innerHTML = ''; 
+
+            if (prop.council && COUNCIL_URLS[prop.council]) {
+                const councilInfo = COUNCIL_URLS[prop.council];
+                specificCouncilLinkDisplay.innerHTML = `
+                    <p>Visit Your Council's Website:</p>
+                    <a href="${councilInfo.url}" target="_blank" rel="noopener noreferrer">${councilInfo.name}</a>
+                `;
+            } else {
+                specificCouncilLinkDisplay.innerHTML = '<p>No specific council link available.</p>';
+            }
+
+            // --- NEW: Display Manual Next Payment Due ---
+            const nextPaymentDueElement = document.getElementById('detailNextPaymentDue');
+            if (prop.nextPaymentMonth && prop.nextPaymentYear) {
+                nextPaymentDueElement.textContent = `${prop.nextPaymentMonth} ${prop.nextPaymentYear}`;
+            } else {
+                nextPaymentDueElement.textContent = 'N/A';
+            }
+            // --- END NEW ---
+        }
+
+        function editCurrentProperty() {
+            if (currentPropertyIndex !== -1) {
+                showScreen('addEditScreen', 'edit', currentPropertyIndex);
+            }
+        }
+
+        function markCurrentPropertyAsPaid() {
+            if (currentPropertyIndex !== -1) {
+                const prop = properties[currentPropertyIndex];
+                if (prop.status === 'Pending') {
+                    const paymentDate = prompt("Enter Payment Date (YYYY-MM-DD):");
+                    if (paymentDate) {
+                        const receiptId = prompt("Enter Receipt/Transaction ID (Optional):");
+                        prop.status = 'Paid';
+                        prop.paymentDate = paymentDate;
+                        prop.receiptId = receiptId || '';
+                        saveProperties();
+                        renderProperties();
+                        displayPropertyDetails(currentPropertyIndex); 
+                        alert('Property marked as Paid!');
+                    } else {
+                        alert('Payment date is required to mark as paid.');
+                    }
+                }
+            }
+        }
+
+        function deleteCurrentProperty() {
+            if (currentPropertyIndex !== -1 && confirm('Are you sure you want to delete this property record?')) {
+                properties.splice(currentPropertyIndex, 1);
+                saveProperties();
+                renderProperties();
+                showScreen('homeScreen'); 
+                currentPropertyIndex = -1; 
+            }
+        }
+
+        function deleteUploadedReceipt() {
+            if (currentPropertyIndex !== -1 && properties[currentPropertyIndex].uploadedReceiptName) {
+                if (confirm(`Are you sure you want to remove the attached receipt "${properties[currentPropertyIndex].uploadedReceiptName}"?`)) {
+                    properties[currentPropertyIndex].uploadedReceiptName = ''; 
+                    properties[currentPropertyIndex].uploadedReceiptBase64 = ''; 
+                    saveProperties(); 
+                    displayPropertyDetails(currentPropertyIndex); 
+                    alert('Attached receipt removed successfully.');
+                }
+            }
+        }
+
+        function viewUploadedPdf() {
+            if (currentPropertyIndex === -1) return;
+            const prop = properties[currentPropertyIndex];
+
+            if (prop.uploadedReceiptBase64) {
+                try {
+                    const b64Data = prop.uploadedReceiptBase64.split(',')[1];
+                    const pdfBlob = b64toBlob(b64Data, 'application/pdf');
+                    
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    window.open(pdfUrl, '_blank'); 
+
+                    setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000); 
+
+                } catch (e) {
+                    console.error("Error viewing PDF:", e);
+                    alert("Could not view PDF. It might be corrupted or an internal error occurred.");
+                }
+            } else {
+                alert("No uploaded PDF receipt found for this property.");
+            }
+        }
+
+        async function downloadPdfReceipt() {
+            if (currentPropertyIndex === -1) return; 
+
+            const prop = properties[currentPropertyIndex];
+
+            if (prop.status !== 'Paid') {
+                alert('Receipt can only be downloaded for paid properties.');
+                return;
+            }
+
+            const doc = new jsPDF();
+
+            doc.setFontSize(22);
+            doc.text("PAYMENT RECEIPT", 105, 20, { align: "center" });
+
+            const generatedDate = new Date().toLocaleDateString('en-GB'); 
+            doc.setFontSize(12);
+            doc.text(`Date Generated: ${generatedDate}`, 20, 30);
+
+            doc.setLineWidth(0.5);
+            doc.line(20, 32, 190, 32); 
+
+            let yPos = 40;
+            const lineHeight = 7;
+            
+            // Set font for property name
+	doc.setFont('helvetica', 'bold');
+	doc.setFontSize(16); // Make the font size larger, e.g., 16 or 18
+
+	doc.text(`Property Name:    ${prop.name}`, 20, yPos);
+
+	doc.setFont('helvetica', 'normal'); // Reset to normal font style
+	doc.setFontSize(12); // Reset font size for subsequent text (e.g., to default 12)
+	yPos += lineHeight;
+           
+            doc.text(`Account No:      ${prop.accNo}`, 20, yPos); yPos += lineHeight;
+            doc.text(`Council:         ${COUNCIL_URLS[prop.council] ? COUNCIL_URLS[prop.council].name : 'N/A'}`, 20, yPos); yPos += lineHeight; 
+            doc.text(`Assessment Year: ${prop.year} (${prop.duration})`, 20, yPos); yPos += lineHeight * 2;
+
+            doc.setFontSize(14);
+            doc.text(`Amount Paid:     RM ${prop.amount.toFixed(2)}`, 20, yPos); yPos += lineHeight;
+            doc.setFontSize(12);
+            
+            let formattedPaymentDate = prop.paymentDate || 'N/A';
+            if (prop.paymentDate) {
+                const [year, month, day] = prop.paymentDate.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                formattedPaymentDate = dateObj.toLocaleDateString('en-GB');
+            }
+            doc.text(`Payment Date:    ${formattedPaymentDate}`, 20, yPos); yPos += lineHeight;
+
+            doc.text(`Transaction ID:  ${prop.receiptId || 'N/A'}`, 20, yPos); yPos += lineHeight * 2;
+
+            doc.setLineWidth(0.5);
+            doc.line(20, yPos - lineHeight, 190, yPos - lineHeight); 
+
+            doc.text("Status:          PAID", 20, yPos); yPos += lineHeight;
+            doc.text("Thank you for your payment!", 105, yPos + 10, { align: "center" });
+
+            // NEW: Add Next Payment Due to PDF
+            if (prop.nextPaymentMonth && prop.nextPaymentYear) {
+                doc.setFontSize(10);
+                doc.text(`Next Payment Due: ${prop.nextPaymentMonth} ${prop.nextPaymentYear}`, 20, yPos + 20);
+            }
+
+
+            const filename = `CukaiTaksiran_Receipt_${prop.name.replace(/\s/g, '_')}_${prop.year}_${prop.accNo}.pdf`;
+            doc.save(filename);
+        }
+
+        // New function to download summary as PDF
+        function downloadSummaryPdf() {
+            const doc = new jsPDF();
+            doc.setFontSize(22);
+            doc.text("Cukai Taksiran Summary", 105, 20, { align: "center" });
+
+            const generatedDate = new Date().toLocaleDateString('en-GB');
+            doc.setFontSize(12);
+            doc.text(`Date Generated: ${generatedDate}`, 20, 30);
+
+            doc.setLineWidth(0.5);
+            doc.line(20, 32, 190, 32);
+
+            let yPos = 40;
+            const lineHeight = 7;
+
+            let pendingCount = 0;
+            let totalDue = 0;
+            let paidCount = 0;
+            let totalPaid = 0;
+
+            properties.forEach(prop => {
+                if (prop.status === 'Pending') {
+                    pendingCount++;
+                    totalDue += prop.amount;
+                } else {
+                    paidCount++;
+                    totalPaid += prop.amount;
+                }
+            });
+
+            doc.setFontSize(14);
+            doc.text(`Total Properties: ${properties.length}`, 20, yPos); yPos += lineHeight;
+            doc.text(`Pending Payments: ${pendingCount} (Total Due: RM ${totalDue.toFixed(2)})`, 20, yPos); yPos += lineHeight;
+            doc.text(`Paid Payments: ${paidCount} (Total Paid: RM ${totalPaid.toFixed(2)})`, 20, yPos); yPos += lineHeight * 2;
+
+            doc.setLineWidth(0.5);
+            doc.line(20, yPos - lineHeight, 190, yPos - lineHeight);
+
+            doc.setFontSize(12);
+            doc.text("Property Details:", 20, yPos); yPos += lineHeight;
+
+            // Add details for each property
+            properties.forEach((prop, index) => {
+                if (yPos > 280) { // Check if new page is needed
+                    doc.addPage();
+                    yPos = 20;
+                    doc.setFontSize(12);
+                    doc.text("Property Details (continued):", 20, yPos); yPos += lineHeight;
+                }
+
+                doc.setFontSize(13);
+                doc.text(`- ${prop.name} (Acc: ${prop.accNo})`, 25, yPos); yPos += lineHeight;
+                doc.setFontSize(11);
+                doc.text(`  Council: ${COUNCIL_URLS[prop.council] ? COUNCIL_URLS[prop.council].name : 'N/A'}`, 30, yPos); yPos += lineHeight;
+                doc.text(`  Amount: RM ${prop.amount.toFixed(2)} for ${prop.duration} ${prop.year}`, 30, yPos); yPos += lineHeight;
+                doc.text(`  Status: ${prop.status}`, 30, yPos); yPos += lineHeight;
+                if (prop.status === 'Paid') {
+                    let formattedPaymentDate = prop.paymentDate || 'N/A';
+                    if (prop.paymentDate) {
+                        const [year, month, day] = prop.paymentDate.split('-').map(Number);
+                        const dateObj = new Date(year, month - 1, day);
+                        formattedPaymentDate = dateObj.toLocaleDateString('en-GB');
+                    }
+                    doc.text(`  Paid On: ${formattedPaymentDate} (Receipt ID: ${prop.receiptId || 'N/A'})`, 30, yPos); yPos += lineHeight;
+                }
+                if (prop.nextPaymentMonth && prop.nextPaymentYear) {
+                    doc.text(`  Next Due: ${prop.nextPaymentMonth} ${prop.nextPaymentYear}`, 30, yPos); yPos += lineHeight;
+                }
+                yPos += 2; // Add a small gap between properties
+            });
+
+            doc.save("CukaiTaksiran_Summary.pdf");
+           // alert('Summary PDF downloaded!');
+        }
+
+
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            const uploadedFileNameDisplay = document.getElementById('uploadedReceiptFileName');
+
+            if (!file) {
+                uploadedFileNameDisplay.innerHTML = 'No PDF receipt attached.';
+                uploadedFileNameDisplay.classList.remove('attached');
+                return;
+            }
+
+            if (file.type !== 'application/pdf') {
+                alert('Please upload a PDF file.');
+                uploadedFileNameDisplay.innerHTML = '<span style="color:#dc3545;">Invalid file type. Please upload a PDF.</span>';
+                uploadedFileNameDisplay.classList.remove('attached');
+                return;
+            }
+
+            if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+                alert(`File size exceeds the limit of ${MAX_UPLOAD_SIZE_MB}MB. Please choose a smaller file.`);
+                uploadedFileNameDisplay.innerHTML = '<span style="color:#dc3545;">File too large. Please upload a smaller PDF.</span>';
+                uploadedFileNameDisplay.classList.remove('attached');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (currentPropertyIndex !== -1) {
+                    properties[currentPropertyIndex].uploadedReceiptName = file.name;
+                    properties[currentPropertyIndex].uploadedReceiptBase64 = e.target.result;
+                    saveProperties();
+                    displayPropertyDetails(currentPropertyIndex);
+                    alert(`PDF Receipt "${file.name}" attached and saved.`);
+
+                    const localStorageSize = new TextEncoder().encode(JSON.stringify(localStorage)).length;
+                    console.log(`Current localStorage usage: ${(localStorageSize / 1024).toFixed(2)} KB`);
+                    if (localStorageSize > 4 * 1024 * 1024) { 
+                        alert("Warning: Local storage is getting full. Storing too many large PDFs may cause issues.");
+                    }
+
+                } else {
+                    uploadedFileNameDisplay.innerHTML = '<span style="color:#dc3545;">Error: No property selected.</span>';
+                    uploadedReceiptFileNameDisplay.classList.remove('attached');
+                }
+            };
+            reader.onerror = function() {
+                alert("Error reading file.");
+                uploadedFileNameDisplay.innerHTML = '<span style="color:#dc3545;">Error reading file.</span>';
+                uploadedReceiptFileNameDisplay.classList.remove('attached');
+            };
+            reader.readAsDataURL(file); 
+
+            event.target.value = null;
+        }
+    </script>
+</body>
+</html>

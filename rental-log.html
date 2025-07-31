@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Rental Collection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f7f7f7;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .selectors {
+      margin-bottom: 15px;
+    }
+
+    label {
+      margin-right: 5px;
+    }
+
+    select, button {
+      padding: 6px 10px;
+      margin-right: 5px;
+      font-size: 0.9em;
+    }
+
+    button {
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-edit { background-color: #4CAF50; color: white; }
+    .btn-edit:hover { background-color: #45a049; }
+
+    .btn-clear {
+  background: none;
+  border: none;
+  color: #f44336;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.btn-clear:hover {
+  color: #d32f2f;
+  transform: scale(1.1);
+}
+
+
+    .btn-add { background-color: #2196F3; color: white; }
+    .btn-add:hover { background-color: #1976D2; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 10px;
+      background-color: white;
+      font-size: 0.9em;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    tfoot {
+      font-weight: bold;
+      background-color: #f9f9f9;
+    }
+
+    input[readonly] {
+      background-color: #eee;
+      border: none;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 4px;
+      height: 16px;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.5s;
+    }
+
+    #report {
+      white-space: pre-wrap;
+      background-color: #fff;
+      padding: 10px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      max-width: 900px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Monthly Rental Collection</h2>
+
+  <div class="selectors">
+    <label for="month">Month:</label>
+    <select id="month">
+      <option>January</option><option>February</option><option>March</option><option>April</option>
+      <option>May</option><option>June</option><option>July</option><option>August</option>
+      <option>September</option><option>October</option><option>November</option><option>December</option>
+    </select>
+
+    <label for="year">Year:</label>
+    <select id="year"></select>
+
+    <button class="btn-edit" onclick="generateReport()">Generate Report</button>
+    <button class="btn-edit" onclick="saveReport()">Save Report</button>
+    <button class="btn-clear" onclick="clearCurrentMonth()">🧹 Clear This Month</button>
+    <button class="btn-add" onclick="addTenant()">➕ Add Tenant</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Full Rent (RM)</th>
+        <th>Rent Paid (RM)</th>
+        <th>Payment Date</th>
+        <th>Balance (RM)</th>
+        <th>Progress</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="rentalBody"></tbody>
+    <tfoot>
+      <tr>
+        <td>Total</td>
+        <td id="totalFullRent">0.00</td>
+        <td id="totalAmount">0.00</td>
+        <td></td>
+        <td id="totalBalance">0.00</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div id="report"></div>
+
+  <script>
+    const yearSelect = document.getElementById("year");
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      if (i === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    window.onload = function () {
+    document.getElementById("month").selectedIndex = new Date().getMonth();
+      loadFromLocalStorage();
+      updateTotals();
+    };
+
+    function getStorageKey() {
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      return `rentalData_${month}-${year}`;
+    }
+
+    function saveToLocalStorage() {
+      const data = [];
+      document.querySelectorAll("#rentalBody tr").forEach(row => {
+        const name = row.cells[0].querySelector("input").value;
+        const fullRent = parseFloat(row.cells[1].querySelector("input").value);
+        const paid = row.cells[2].querySelector("input").value;
+        const date = row.cells[3].querySelector("input").value;
+        data.push({ name, fullRent, paid, date });
+      });
+      localStorage.setItem(getStorageKey(), JSON.stringify(data));
+    }
+
+    function loadFromLocalStorage() {
+      const stored = localStorage.getItem(getStorageKey());
+      if (!stored) {
+        // Add default rows
+        addRow("Kawan", 500, 0, new Date().toISOString().split("T")[0]);
+        addRow("Suresh", 600, 0, new Date().toISOString().split("T")[0]);
+        addRow("Roland", 550, 0, new Date().toISOString().split("T")[0]);
+        
+        return;
+      }
+
+      const data = JSON.parse(stored);
+      const tbody = document.getElementById("rentalBody");
+      tbody.innerHTML = "";
+
+      data.forEach(entry => {
+        addRow(entry.name, entry.fullRent, entry.paid, entry.date);
+      });
+    }
+
+    function addRow(name, fullRent, paid, date) {
+      const tbody = document.getElementById("rentalBody");
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" value="${name}" readonly></td>
+        <td><input type="number" value="${fullRent}" readonly></td>
+        <td><input type="number" value="${paid}" readonly></td>
+        <td><input type="date" value="${date}" readonly></td>
+        <td class="balance">0.00</td>
+        <td>
+          <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+          </div>
+        </td>
+        <td>
+          <button class="btn-edit" onclick="toggleEdit(this)">Edit</button>
+          <button class="btn-clear" onclick="deleteTenant(this)">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+      updateTotals();
+    }
+
+    function toggleEdit(btn) {
+      const row = btn.closest('tr');
+      const inputs = row.querySelectorAll('input');
+      const isReadOnly = inputs[0].readOnly;
+
+      inputs.forEach(input => {
+        input.readOnly = !isReadOnly;
+        input.style.backgroundColor = isReadOnly ? "#fff" : "#eee";
+      });
+
+      btn.textContent = isReadOnly ? "Save" : "Edit";
+
+      if (!isReadOnly) {
+        updateTotals();
+        saveToLocalStorage();
+      }
+    }
+
+    function updateTotals() {
+      let totalPaid = 0;
+      let totalBalance = 0;
+      let totalFullRent = 0;
+
+      document.querySelectorAll('#rentalBody tr').forEach(row => {
+        const fullRent = parseFloat(row.cells[1].querySelector("input").value) || 0;
+        const paid = parseFloat(row.cells[2].querySelector("input").value) || 0;
+        const balance = fullRent - paid;
+
+        totalPaid += paid;
+        totalBalance += balance;
+        totalFullRent += fullRent;
+
+        row.querySelector('.balance').textContent = balance.toFixed(2);
+        const progress = Math.min(100, (paid / fullRent) * 100);
+        row.querySelector('.progress-bar').style.width = progress + "%";
+      });
+
+      document.getElementById('totalAmount').textContent = totalPaid.toFixed(2);
+      document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+      document.getElementById('totalFullRent').textContent = totalFullRent.toFixed(2);
+    }
+
+    function generateReport() {
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      let report = `Rental Collection Report - ${month} ${year}\n\n`;
+      let totalPaid = 0, totalBalance = 0, totalRent = 0;
+
+      document.querySelectorAll('#rentalBody tr').forEach(row => {
+        const name = row.cells[0].querySelector("input").value;
+        const fullRent = parseFloat(row.cells[1].querySelector("input").value) || 0;
+        const paid = parseFloat(row.cells[2].querySelector("input").value) || 0;
+        const date = row.cells[3].querySelector("input").value;
+        const balance = fullRent - paid;
+
+        report += `Name: ${name} | Rent: RM ${fullRent.toFixed(2)} | Paid: RM ${paid.toFixed(2)} | Date: ${date} | Balance: RM ${balance.toFixed(2)}\n`;
+
+        totalPaid += paid;
+        totalBalance += balance;
+        totalRent += fullRent;
+      });
+
+      report += `\nTotal Full Rent: RM ${totalRent.toFixed(2)}\nTotal Paid: RM ${totalPaid.toFixed(2)}\nTotal Balance: RM ${totalBalance.toFixed(2)}`;
+      document.getElementById("report").textContent = report;
+
+      saveToLocalStorage();
+    }
+
+    function saveReport() {
+      const content = document.getElementById("report").textContent;
+      if (!content) {
+        alert("Please generate the report first.");
+        return;
+      }
+
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      const fileName = `Rental_Report_${month}-${year}.txt`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+    }
+
+   function clearCurrentMonth() {
+  if (!confirm("Clear all payment data for this month?")) return;
+
+  document.querySelectorAll("#rentalBody tr").forEach(row => {
+    row.cells[2].querySelector("input").value = 0; // Rent Paid
+    row.cells[3].querySelector("input").value = new Date().toISOString().split("T")[0]; // Date
+  });
+
+  updateTotals();
+  saveToLocalStorage();
+  document.getElementById("report").textContent = "";
+}
+
+
+    function addTenant() {
+  const today = new Date().toISOString().split("T")[0];
+  addRow("New Tenant", 500, 0, today);
+  saveToLocalStorage();  // Save right after adding
+}
+
+    function deleteTenant(btn) {
+      if (confirm("Remove this tenant?")) {
+        const row = btn.closest("tr");
+        row.remove();
+        updateTotals();
+        saveToLocalStorage();
+      }
+    }
+  </script>
+</body>
+</html>
+

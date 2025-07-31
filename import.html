@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Local Storage</title>
+</head>
+<body>
+    <textarea id="localStorageData" rows="20" cols="100" placeholder="Paste your exported JSON data here"></textarea>
+    <button onclick="importData()">Import</button>
+
+    <script>
+        function importData() {
+            let jsonString = document.getElementById('localStorageData').value;
+            try {
+                let importedData = JSON.parse(jsonString);
+                for (let key in importedData) {
+                    localStorage.setItem(key, importedData[key]);
+                }
+                alert('Data imported successfully!');
+            } catch (e) {
+                alert('Error parsing JSON: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

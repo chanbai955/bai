@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Export Local Storage</title>
+</head>
+<body>
+    <textarea id="localStorageData" rows="20" cols="100"></textarea>
+    <button onclick="exportData()">Export</button>
+
+    <script>
+        function exportData() {
+            let data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                data[key] = localStorage.getItem(key);
+            }
+            document.getElementById('localStorageData').value = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chan Toggle - Password Protected Account Manager</title>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            min-height: 90vh; /* Ensure body takes enough height for centering */
+            justify-content: center; /* Center content vertically */
+        }
+
+        /* --- START CHANGES FOR H1 --- */
+        h1 {
+            color: #333;
+            margin-bottom: 30px; /* More space below title */
+            /* New styles for "Welcome" */
+            color: #3783FF; /* Blue color */
+            font-size:35px; /* Font size 14px */
+            /* 3D effect using multiple text shadows */
+            text-shadow:
+                1px 1px 0 #0000FF,    /* Main blue shadow */
+                2px 2px 0 #0000FF,
+                3px 3px 0 #0000FF,
+                4px 4px 0 #0000FF,
+                /* Darker shadows to give depth, slightly offset */
+                5px 5px 0 #0000cc,
+                6px 6px 0 #0000cc,
+                7px 7px 0 #0000cc;
+            /* To ensure the original text is visible without blending too much with shadow */
+            position: relative;
+            z-index: 1;
+            /* Optional: Add a subtle outline if text seems too thin */
+            -webkit-text-stroke: 0.5px #000099; /* For Webkit browsers like Chrome, Safari */
+            text-stroke: 0.5px #000099; /* Standard property */
+        }
+        /* --- END CHANGES FOR H1 --- */
+
+
+        /* Chan Toggle Button Styles */
+        .chan-toggle-container {
+            margin: 20px 0;
+            display: inline-block; /* To contain the button's width */
+        }
+
+        .chan-toggle-button {
+            background-color: #558B2F; /* Dark green base */
+            border-radius: 25px; /* Rounded corners */
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between text and emojis */
+            cursor: pointer;
+            position: relative; /* For 3D effect */
+            transition: transform 0.1s ease-out; /* For subtle press effect */
+            box-shadow: 0 5px 0 0 #33531C; /* Darker green for bottom 3D shadow */
+            border: none; /* Remove default button border */
+            outline: none; /* Remove outline on focus */
+            user-select: none; /* Prevent text selection */
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Subtle text shadow */
+        }
+
+        /* When the button is "pressed" (active state) */
+        .chan-toggle-button:active {
+            transform: translateY(3px); /* Move down to simulate press */
+            box-shadow: 0 2px 0 0 #33531C; /* Reduce shadow to simulate "pressed" */
+        }
+
+        .chan-toggle-button img.emoji {
+            width: 24px; /* Size of emojis */
+            height: 24px;
+            vertical-align: middle; /* Align emojis with text */
+        }
+
+        /* --- Common Modal Styles --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top of everything */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+            padding: 20px; /* Add some padding for smaller screens */
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: left; /* Align text within modal content */
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* Specific styles for Protection Modal */
+        #protectionModal .modal-content {
+            max-width: 350px; /* Smaller for just a password prompt */
+        }
+
+        #protectionForm label {
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        #protectionForm input[type="password"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #protectionForm .error-message {
+            color: red;
+            margin-bottom: 10px;
+            display: none; /* Hidden by default */
+        }
+
+        #protectionForm button[type="submit"] {
+            background-color: #007bff; /* Blue for submission */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            width: 100%; /* Full width button */
+        }
+
+        #protectionForm button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        /* Specific styles for Account Manager Modal */
+        #accountModal .modal-content {
+            max-width: 650px; /* Wider for tabs */
+        }
+
+        /* --- Tab Styles within Account Manager Modal --- */
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+            gap: 2px; /* Small space between tabs */
+        }
+
+        .tab-button {
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-bottom: none; /* Remove bottom border for tab effect */
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin-bottom: -1px; /* Overlap with border-bottom of container */
+            font-weight: bold;
+            color: #555;
+            flex-grow: 1; /* Allow tabs to grow and fill space */
+            text-align: center;
+            min-width: 80px; /* Ensure a minimum width for small tabs */
+            box-sizing: border-box; /* Include padding/border in width */
+        }
+
+        .tab-button:hover {
+            background-color: #e2e2e2;
+        }
+
+        /* Changed styles for active tab */
+        .tab-button.active {
+            background-color: #007bff; /* Changed to vibrant blue */
+            border-color: #007bff; /* Match border color to background */
+            border-bottom: 1px solid #007bff; /* Adjust border to match new color */
+            color: white; /* Changed text color to white for better contrast */
+            cursor: default;
+        }
+
+        .tab-content {
+            display: none; /* Hide all tab content by default */
+        }
+
+        .tab-content.active {
+            display: block; /* Show active tab content */
+        }
+
+        /* Styles for the account forms within tabs */
+        .tab-content form label {
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .tab-content form input[type="text"] {
+            width: calc(100% - 22px); /* Account for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        /* Styles for the password input group with eye icon */
+        .password-input-group {
+            position: relative;
+            margin-bottom: 15px; /* Add margin to bottom */
+        }
+
+        .password-input-group label {
+            margin-bottom: 5px;
+            margin-top: 0; /* Override default form label margin-top */
+        }
+
+        .password-input-group input[type="password"],
+        .password-input-group input[type="text"] { /* Both types need this styling */
+            width: calc(100% - 42px); /* Smaller width to make space for icon */
+            padding: 10px;
+            padding-right: 35px; /* Space for icon */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Include padding in width */
+            margin-bottom: 0; /* Reset margin from general input styles */
+        }
+
+        .password-toggle-icon {
+            position: absolute;
+            right: 10px; /* Position from the right */
+            top: calc(50% + 5px); /* Adjust top to center vertically with input field, accounting for label */
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            height: 20px; /* Match SVG height */
+            width: 20px; /* Match SVG width */
+            display: flex; /* To center SVG if it's smaller */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block; /* Remove extra space below SVG */
+        }
+
+        .tab-content form button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .tab-content form button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome</h1> <div class="chan-toggle-container">
+        <button id="chanToggleButton" class="chan-toggle-button">
+            <span class="chan-toggle-button-text">Chan</span>
+            </button>
+    </div>
+
+    <div id="protectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeProtectionModal">&times;</span>
+            <h2>Enter</h2>
+            <form id="protectionForm">
+                <label for="masterPasswordInput">Password:</label>
+                <input type="password" id="masterPasswordInput" required>
+                <p class="error-message" id="passwordError">Incorrect password. Please try again.</p>
+                <button type="submit">Unlock</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeAccountModal">&times;</span>
+            <h2 id="modalMainTitle"> My Accounts</h2>
+
+            <div class="tab-container">
+                <button class="tab-button active" data-account="facebook">Facebook</button>
+                <button class="tab-button" data-account="instagram">Instagram</button>
+                <button class="tab-button" data-account="yahoomail">Yahoo Mail</button>
+                <button class="tab-button" data-account="googlemail">Google Mail</button>
+                <button class="tab-button" data-account="officemail">Office Mail</button>
+                <button class="tab-button" data-account="myjpj">MyJPJ</button>
+                <button class="tab-button" data-account="shopee">Shopee</button>
+                <button class="tab-button" data-account="lazada">Lazada</button>
+                <button class="tab-button" data-account="checkpoint">Checkpoint</button>
+                <button class="tab-button" data-account="heyjom">Heyjom</button>
+                <button class="tab-button" data-account="jomrun">Jomrun</button>
+                <button class="tab-button" data-account="raceasia">RaceAsia</button>
+                <button class="tab-button" data-account="racerooster">Racerooster</button>
+                <button class="tab-button" data-account="runstation">RunStation</button>
+                <button class="tab-button" data-account="myfitxt">MyfitxT</button>
+                <button class="tab-button" data-account="pmcare">PMCare</button>
+                <button class="tab-button" data-account="compumed">Compumed</button>
+                <button class="tab-button" data-account="padu">PADU</button>
+                <button class="tab-button" data-account="wise">Wise</button>
+                <button class="tab-button" data-account="pmo">PMO</button>
+                <button class="tab-button" data-account="digi">Digi</button>
+                <button class="tab-button" data-account="luno">Luno</button>
+                <button class="tab-button" data-account="mydigital">MyDigital</button>
+                <button class="tab-button" data-account="rakuten">Rakuten</button>
+                <button class="tab-button" data-account="epf">EPF</button>
+                <button class="tab-button" data-account="petron">Petron</button>
+                <button class="tab-button" data-account="gsc">GSC</button>
+                <button class="tab-button" data-account="tgv">TGV</button>
+                <button class="tab-button" data-account="myinstun">Myinstun</button>
+                <button class="tab-button" data-account="mudah">Mudah</button>
+                <button class="tab-button" data-account="move-on">AirAsia-Move</button>
+                <button class="tab-button" data-account="blogger">Blogger</button>
+                <button class="tab-button" data-account="flickr">Flickr</button>
+            </div>
+
+            <div id="tabContentContainer">
+                <div id="facebook-content" class="tab-content active">
+                    <h3>Facebook Details</h3>
+                    <form id="facebookForm" data-account="facebook">
+                        <label for="facebookUsername">Username:</label>
+                        <input type="text" id="facebookUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="facebookPassword">Password:</label>
+                            <input type="password" id="facebookPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="facebookPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Facebook</button>
+                    </form>
+                </div>
+
+                <div id="instagram-content" class="tab-content">
+                    <h3>Instagram Details</h3>
+                    <form id="instagramForm" data-account="instagram">
+                        <label for="instagramUsername">Username:</label>
+                        <input type="text" id="instagramUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="instagramPassword">Password:</label>
+                            <input type="password" id="instagramPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="instagramPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Instagram</button>
+                    </form>
+                </div>
+
+                <div id="yahoomail-content" class="tab-content">
+                    <h3>Yahoo Mail Details</h3>
+                    <form id="yahoomailForm" data-account="yahoomail">
+                        <label for="yahoomailUsername">Username:</label>
+                        <input type="text" id="yahoomailUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="yahoomailPassword">Password:</label>
+                            <input type="password" id="yahoomailPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="yahoomailPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Yahoo Mail</button>
+                    </form>
+                </div>
+
+                <div id="googlemail-content" class="tab-content">
+                    <h3>Google Mail Details</h3>
+                    <form id="googlemailForm" data-account="googlemail">
+                        <label for="googlemailUsername">Username:</label>
+                        <input type="text" id="googlemailUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="googlemailPassword">Password:</label>
+                            <input type="password" id="googlemailPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="googlemailPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Google Mail</button>
+                    </form>
+                </div>
+
+                <div id="officemail-content" class="tab-content">
+                    <h3>Office Mail Details</h3>
+                    <form id="officemailForm" data-account="officemail">
+                        <label for="officemailUsername">Username:</label>
+                        <input type="text" id="officemailUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="officemailPassword">Password:</label>
+                            <input type="password" id="officemailPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="officemailPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Office Mail</button>
+                    </form>
+                </div>
+
+                <div id="myjpj-content" class="tab-content">
+                    <h3>MyJPJ Details</h3>
+                    <form id="myjpjForm" data-account="myjpj">
+                        <label for="myjpjUsername">Username:</label>
+                        <input type="text" id="myjpjUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="myjpjPassword">Password:</label>
+                            <input type="password" id="myjpjPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="myjpjPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save MyJPJ</button>
+                    </form>
+                </div>
+
+                <div id="shopee-content" class="tab-content">
+                    <h3>Shopee Details</h3>
+                    <form id="shopeeForm" data-account="shopee">
+                        <label for="shopeeUsername">Username:</label>
+                        <input type="text" id="shopeeUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="shopeePassword">Password:</label>
+                            <input type="password" id="shopeePassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="shopeePassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Shopee</button>
+                    </form>
+                </div>
+
+                <div id="lazada-content" class="tab-content">
+                    <h3>Lazada Details</h3>
+                    <form id="lazadaForm" data-account="lazada">
+                        <label for="lazadaUsername">Username:</label>
+                        <input type="text" id="lazadaUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="lazadaPassword">Password:</label>
+                            <input type="password" id="lazadaPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="lazadaPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Lazada</button>
+                    </form>
+                </div>
+
+                <div id="checkpoint-content" class="tab-content">
+                    <h3>Checkpoint Details</h3>
+                    <form id="checkpointForm" data-account="checkpoint">
+                        <label for="checkpointUsername">Username:</label>
+                        <input type="text" id="checkpointUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="checkpointPassword">Password:</label>
+                            <input type="password" id="checkpointPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="checkpointPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Checkpoint</button>
+                    </form>
+                </div>
+
+                <div id="heyjom-content" class="tab-content">
+                    <h3>Heyjom Details</h3>
+                    <form id="heyjomForm" data-account="heyjom">
+                        <label for="heyjomUsername">Username:</label>
+                        <input type="text" id="heyjomUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="heyjomPassword">Password:</label>
+                            <input type="password" id="heyjomPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="heyjomPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Heyjom</button>
+                    </form>
+                </div>
+
+                <div id="jomrun-content" class="tab-content">
+                    <h3>Jomrun Details</h3>
+                    <form id="jomrunForm" data-account="jomrun">
+                        <label for="jomrunUsername">Username:</label>
+                        <input type="text" id="jomrunUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="jomrunPassword">Password:</label>
+                            <input type="password" id="jomrunPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="jomrunPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Jomrun</button>
+                    </form>
+                </div>
+
+                <div id="raceasia-content" class="tab-content">
+                    <h3>RaceAsia Details</h3>
+                    <form id="raceasiaForm" data-account="raceasia">
+                        <label for="raceasiaUsername">Username:</label>
+                        <input type="text" id="raceasiaUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="raceasiaPassword">Password:</label>
+                            <input type="password" id="raceasiaPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="raceasiaPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save RaceAsia</button>
+                    </form>
+                </div>
+
+                <div id="racerooster-content" class="tab-content">
+                    <h3>Racerooster Details</h3>
+                    <form id="raceroosterForm" data-account="racerooster">
+                        <label for="raceroosterUsername">Username:</label>
+                        <input type="text" id="raceroosterUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="raceroosterPassword">Password:</label>
+                            <input type="password" id="raceroosterPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="raceroosterPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Racerooster</button>
+                    </form>
+                </div>
+
+                <div id="runstation-content" class="tab-content">
+                    <h3>RunStation Details</h3>
+                    <form id="runstationForm" data-account="runstation">
+                        <label for="runstationUsername">Username:</label>
+                        <input type="text" id="runstationUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="runstationPassword">Password:</label>
+                            <input type="password" id="runstationPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="runstationPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save RunStation</button>
+                    </form>
+                </div>
+
+                <div id="myfitxt-content" class="tab-content">
+                    <h3>MyfitxT Details</h3>
+                    <form id="myfitxtForm" data-account="myfitxt">
+                        <label for="myfitxtUsername">Username:</label>
+                        <input type="text" id="myfitxtUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="myfitxtPassword">Password:</label>
+                            <input type="password" id="myfitxtPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="myfitxtPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save MyfitxT</button>
+                    </form>
+                </div>
+
+                <div id="pmcare-content" class="tab-content">
+                    <h3>PMCare Details</h3>
+                    <form id="pmcareForm" data-account="pmcare">
+                        <label for="pmcareUsername">Username:</label>
+                        <input type="text" id="pmcareUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="pmcarePassword">Password:</label>
+                            <input type="password" id="pmcarePassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="pmcarePassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save PMCare</button>
+                    </form>
+                </div>
+
+                <div id="compumed-content" class="tab-content">
+                    <h3>Compumed Details</h3>
+                    <form id="compumedForm" data-account="compumed">
+                        <label for="compumedUsername">Username:</label>
+                        <input type="text" id="compumedUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="compumedPassword">Password:</label>
+                            <input type="password" id="compumedPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="compumedPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Compumed</button>
+                    </form>
+                </div>
+
+                <div id="padu-content" class="tab-content">
+                    <h3>PADU Details</h3>
+                    <form id="paduForm" data-account="padu">
+                        <label for="paduUsername">Username:</label>
+                        <input type="text" id="paduUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="paduPassword">Password:</label>
+                            <input type="password" id="paduPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="paduPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save PADU</button>
+                    </form>
+                </div>
+
+                <div id="wise-content" class="tab-content">
+                    <h3>Wise Details</h3>
+                    <form id="wiseForm" data-account="wise">
+                        <label for="wiseUsername">Username:</label>
+                        <input type="text" id="wiseUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="wisePassword">Password:</label>
+                            <input type="password" id="wisePassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="wisePassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Wise</button>
+                    </form>
+                </div>
+
+                <div id="pmo-content" class="tab-content">
+                    <h3>PMO Details</h3>
+                    <form id="pmoForm" data-account="pmo">
+                        <label for="pmoUsername">Username:</label>
+                        <input type="text" id="pmoUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="pmoPassword">Password:</label>
+                            <input type="password" id="pmoPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="pmoPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save PMO</button>
+                    </form>
+                </div>
+
+                <div id="digi-content" class="tab-content">
+                    <h3>Digi Details</h3>
+                    <form id="digiForm" data-account="digi">
+                        <label for="digiUsername">Username:</label>
+                        <input type="text" id="digiUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="digiPassword">Password:</label>
+                            <input type="password" id="digiPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="digiPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Digi</button>
+                    </form>
+                </div>
+
+                <div id="luno-content" class="tab-content">
+                    <h3>Luno Details</h3>
+                    <form id="lunoForm" data-account="luno">
+                        <label for="lunoUsername">Username:</label>
+                        <input type="text" id="lunoUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="lunoPassword">Password:</label>
+                            <input type="password" id="lunoPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="lunoPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Luno</button>
+                    </form>
+                </div>
+
+                <div id="mydigital-content" class="tab-content">
+                    <h3>MyDigital Details</h3>
+                    <form id="mydigitalForm" data-account="mydigital">
+                        <label for="mydigitalUsername">Username:</label>
+                        <input type="text" id="mydigitalUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="mydigitalPassword">Password:</label>
+                            <input type="password" id="mydigitalPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="mydigitalPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save MyDigital</button>
+                    </form>
+                </div>
+
+                <div id="rakuten-content" class="tab-content">
+                    <h3>Rakuten Details</h3>
+                    <form id="rakutenForm" data-account="rakuten">
+                        <label for="rakutenUsername">Username:</label>
+                        <input type="text" id="rakutenUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="rakutenPassword">Password:</label>
+                            <input type="password" id="rakutenPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="rakutenPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Rakuten</button>
+                    </form>
+                </div>
+
+                <div id="epf-content" class="tab-content">
+                    <h3>EPF Details</h3>
+                    <form id="epfForm" data-account="epf">
+                        <label for="epfUsername">Username:</label>
+                        <input type="text" id="epfUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="epfPassword">Password:</label>
+                            <input type="password" id="epfPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="epfPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save EPF</button>
+                    </form>
+                </div>
+
+                <div id="petron-content" class="tab-content">
+                    <h3>Petron Details</h3>
+                    <form id="petronForm" data-account="petron">
+                        <label for="petronUsername">Username:</label>
+                        <input type="text" id="petronUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="petronPassword">Password:</label>
+                            <input type="password" id="petronPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="petronPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Petron</button>
+                    </form>
+                </div>
+
+                <div id="gsc-content" class="tab-content">
+                    <h3>GSC Details</h3>
+                    <form id="gscForm" data-account="gsc">
+                        <label for="gscUsername">Username:</label>
+                        <input type="text" id="gscUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="gscPassword">Password:</label>
+                            <input type="password" id="gscPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="gscPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save GSC</button>
+                    </form>
+                </div>
+
+                <div id="tgv-content" class="tab-content">
+                    <h3>TGV Details</h3>
+                    <form id="tgvForm" data-account="tgv">
+                        <label for="tgvUsername">Username:</label>
+                        <input type="text" id="tgvUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="tgvPassword">Password:</label>
+                            <input type="password" id="tgvPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="tgvPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save TGV</button>
+                    </form>
+                </div>
+                <div id="myinstun-content" class="tab-content">
+                    <h3>Myinstun Details</h3>
+                    <form id="myinstunForm" data-account="myinstun">
+                        <label for="myinstunUsername">Username:</label>
+                        <input type="text" id="myinstunUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="myinstunPassword">Password:</label>
+                            <input type="password" id="myinstunPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="myinstunPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Myinstun</button>
+                    </form>
+                </div>
+
+                <div id="mudah-content" class="tab-content">
+                    <h3>Mudah Details</h3>
+                    <form id="mudahForm" data-account="mudah">
+                        <label for="mudahUsername">Username:</label>
+                        <input type="text" id="mudahUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="mudahPassword">Password:</label>
+                            <input type="password" id="mudahPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="mudahPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Mudah</button>
+                    </form>
+                </div>
+
+                <div id="move-on-content" class="tab-content">
+                    <h3>Move-On Details</h3>
+                    <form id="move-onForm" data-account="move-on">
+                        <label for="move-onUsername">Username:</label>
+                        <input type="text" id="move-onUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="move-onPassword">Password:</label>
+                            <input type="password" id="move-onPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="move-onPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Move-On</button>
+                    </form>
+                </div>
+
+                <div id="blogger-content" class="tab-content">
+                    <h3>Blogger Details</h3>
+                    <form id="bloggerForm" data-account="blogger">
+                        <label for="bloggerUsername">Username:</label>
+                        <input type="text" id="bloggerUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="bloggerPassword">Password:</label>
+                            <input type="password" id="bloggerPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="bloggerPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Blogger</button>
+                    </form>
+                </div>
+                <div id="flickr-content" class="tab-content">
+                    <h3>Flickr Details</h3>
+                    <form id="flickrForm" data-account="flickr">
+                        <label for="flickrUsername">Username:</label>
+                        <input type="text" id="flickrUsername" name="username" required>
+                        <div class="password-input-group">
+                            <label for="flickrPassword">Password:</label>
+                            <input type="password" id="flickrPassword" name="password" required>
+                            <span class="password-toggle-icon" data-target="flickrPassword">
+                                <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.94-3.06M14.06 14.06a5 5 0 0 1-7.07-7.07m-4.59-4.59L2 2l20 20-1.41 1.41L11.41 11.41"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <button type="submit">Save Flickr</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Element References ---
+            const chanToggleButton = document.getElementById('chanToggleButton');
+            const protectionModal = document.getElementById('protectionModal');
+            const closeProtectionModalButton = document.getElementById('closeProtectionModal');
+            const protectionForm = document.getElementById('protectionForm');
+            const masterPasswordInput = document.getElementById('masterPasswordInput');
+            const passwordError = document.getElementById('passwordError');
+            const accountModal = document.getElementById('accountModal');
+            const closeAccountModalButton = document.getElementById('closeAccountModal');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const passwordToggleIcons = document.querySelectorAll('.password-toggle-icon');
+            const accountForms = document.querySelectorAll('.tab-content form');
+
+            // --- Configuration ---
+            // The SHA256 hash of the master password 'zeeya'.
+            // For true security, this hash should ideally come from a secure server
+            // and include a salt and key stretching (e.g., bcrypt, Argon2).
+            const HASHED_MASTER_PASSWORD_SHA256 = 'a5e62c7934818453009c6bda541687aab5ea8e51937a0c5bd7fb7e9f4099be2b';
+
+            // --- Utility Functions ---
+
+            /**
+             * Hashes a given string using the SHA-256 algorithm.
+             * Utilizes the Web Cryptography API for secure hashing.
+             * @param {string} message The string to be hashed.
+             * @returns {Promise<string>} A promise that resolves with the hexadecimal SHA-256 hash.
+             */
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message); // Convert string to ArrayBuffer
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer); // Hash the buffer
+                const hashArray = Array.from(new Uint8Array(hashBuffer)); // Convert buffer to byte array
+                const hexHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // Convert bytes to hex string
+                return hexHash;
+            }
+
+            /**
+             * Saves account details (username and password) to localStorage.
+             * @param {string} accountName The name of the account (e.g., 'facebook', 'myjpj').
+             * @param {string} username The username to save.
+             * @param {string} password The password to save. (WARNING: Storing passwords directly in localStorage is INSECURE for production apps.)
+             */
+            function saveAccountDetails(accountName, username, password) {
+                localStorage.setItem(`account_${accountName}_username`, username);
+                localStorage.setItem(`account_${accountName}_password`, password);
+                console.log(`Saved details for ${accountName} to localStorage.`);
+            }
+
+            /**
+             * Loads account details from localStorage and populates the form fields for a given account.
+             * @param {string} accountName The name of the account to load.
+             */
+            function loadAccountDetails(accountName) {
+                const username = localStorage.getItem(`account_${accountName}_username`);
+                const password = localStorage.getItem(`account_${accountName}_password`); // WARNING: See saveAccountDetails warning.
+
+                const form = document.getElementById(`${accountName}Form`);
+                if (form) {
+                    const usernameField = form.querySelector('input[name="username"]');
+                    const passwordField = form.querySelector('input[name="password"]');
+
+                    if (usernameField) usernameField.value = username || '';
+                    if (passwordField) {
+                        passwordField.value = password || '';
+                        // Reset password field type to 'password' and show eye-open icon on load
+                        passwordField.type = 'password';
+                        const iconContainer = passwordField.closest('.password-input-group')?.querySelector('.password-toggle-icon');
+                        if (iconContainer) {
+                            iconContainer.querySelector('.eye-open').style.display = 'block';
+                            iconContainer.querySelector('.eye-off').style.display = 'none';
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Activates a specific account tab within the account manager modal.
+             * Hides all other tabs and populates the active tab's form with data from localStorage.
+             * @param {string} accountName The 'data-account' attribute value of the tab to activate.
+             */
+            function activateTab(accountName) {
+                // Remove 'active' class from all tab buttons and contents
+                tabButtons.forEach(button => button.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add 'active' class to the selected tab button
+                const activeButton = document.querySelector(`.tab-button[data-account="${accountName}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+
+                // Display the corresponding tab content
+                const activeContent = document.getElementById(`${accountName}-content`);
+                if (activeContent) {
+                    activeContent.classList.add('active');
+                    loadAccountDetails(accountName); // Load data for the active tab
+                }
+            }
+
+            // --- Event Listeners ---
+
+            // Event listener for the main "Chan Toggle" button
+            chanToggleButton.addEventListener('click', () => {
+                protectionModal.style.display = 'flex'; // Show the protection modal
+                masterPasswordInput.value = ''; // Clear previous input
+                passwordError.style.display = 'none'; // Hide any previous error messages
+                masterPasswordInput.focus(); // Focus input for user convenience
+            });
+
+            // Event listener for closing the Protection Modal
+            closeProtectionModalButton.addEventListener('click', () => {
+                protectionModal.style.display = 'none'; // Hide the modal
+                masterPasswordInput.value = ''; // Clear input on close
+                passwordError.style.display = 'none'; // Hide error
+            });
+
+            // Event listener for the Protection Form submission (master password verification)
+            protectionForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent default form submission (page reload)
+
+                const enteredPassword = masterPasswordInput.value;
+                const hashedEnteredPassword = await sha256(enteredPassword); // Hash entered password for comparison
+
+                if (hashedEnteredPassword === HASHED_MASTER_PASSWORD_SHA256) {
+                    // Password correct: close protection modal, open account modal
+                    protectionModal.style.display = 'none';
+                    accountModal.style.display = 'flex';
+                    activateTab('facebook'); // Load the default tab (Facebook) and its data
+                    masterPasswordInput.value = ''; // Clear password on successful login
+                    passwordError.style.display = 'none'; // Hide error
+                } else {
+                    // Password incorrect: show error, clear input, retain focus
+                    passwordError.style.display = 'block';
+                    masterPasswordInput.value = '';
+                    masterPasswordInput.focus();
+                }
+            });
+
+            // Event listener for closing the Account Manager Modal
+            closeAccountModalButton.addEventListener('click', () => {
+                accountModal.style.display = 'none'; // Hide the modal
+            });
+
+            // Universal click listener to close modals when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === protectionModal) {
+                    protectionModal.style.display = 'none';
+                    masterPasswordInput.value = '';
+                    passwordError.style.display = 'none';
+                } else if (event.target === accountModal) {
+                    accountModal.style.display = 'none';
+                }
+            });
+
+            // Event listeners for individual tab buttons (to switch accounts)
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const accountName = button.dataset.account;
+                    activateTab(accountName); // Activate the clicked tab and load its data
+                });
+            });
+
+            // Event listeners for password toggle icons (show/hide password)
+            passwordToggleIcons.forEach(iconContainer => {
+                iconContainer.addEventListener('click', function() {
+                    const targetId = this.dataset.target; // Use 'this' as it refers to the clicked iconContainer
+                    const passwordInput = document.getElementById(targetId);
+                    const eyeOpenIcon = this.querySelector('.eye-open');
+                    const eyeOffIcon = this.querySelector('.eye-off');
+
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text'; // Change to text to show password
+                        eyeOpenIcon.style.display = 'none';
+                        eyeOffIcon.style.display = 'block';
+                    } else {
+                        passwordInput.type = 'password'; // Change back to password
+                        eyeOpenIcon.style.display = 'block';
+                        eyeOffIcon.style.display = 'none';
+                    }
+                });
+            });
+
+            // Event listeners for saving account details within each tab form
+            accountForms.forEach(form => {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault(); // Prevent default form submission
+
+                    const accountName = form.dataset.account;
+                    const username = form.querySelector('input[name="username"]').value;
+                    const password = form.querySelector('input[name="password"]').value;
+
+                    // Save to localStorage
+                    saveAccountDetails(accountName, username, password);
+
+                    alert(`Details for ${accountName} saved successfully!`);
+                });
+            });
+
+            // Initial load for the first tab if the account modal is ever directly opened
+            // (though in this flow, it's opened after master password)
+            // No need to explicitly call loadAccountDetails on DOMContentLoaded for all,
+            // as activateTab('facebook') will do it when the modal opens.
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Chanthiran's App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Make body take full viewport height */
+            background-color: #fcfcfc;
+            overflow: hidden; /* Prevent scrollbars if content is centered */
+        }
+
+        .welcome-message {
+            font-size: 3em; /* Larger font size */
+            font-weight: bold;
+            color: #34495e; /* Darker text for prominence */
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 80%; /* Ensure it doesn't get too wide */
+
+            /* Fade in and out animation */
+            animation: fadeInOut 6s infinite ease-in-out; /* 6s duration, infinite loop, smooth ease */
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }   /* Start completely transparent */
+            25% { opacity: 1; }  /* Fade in */
+            75% { opacity: 1; }  /* Stay fully opaque */
+            100% { opacity: 0; } /* Fade out */
+        }
+
+        /* Optional: Smaller font for very small screens */
+        @media (max-width: 600px) {
+            .welcome-message {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-message">
+        Welcome to Chanthiran's App
+    </div>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 10px;
+            box-sizing: border-box;
+        }
+
+        .notepad-container {
+            background-color: none !important;.
+            
+            padding: 8px 12px; /* Adjusted padding: reduced top/bottom, slightly more left/right */
+            border-radius: 15px; /* More rounded for a cuter, button-like look */
+            box-shadow: none; /* Removed shadow */
+            width: 100%;
+            max-width: 180px; /* Even smaller default width */
+            overflow: hidden;
+            border: none; /* Slightly softer border color */
+            cursor: pointer; /* Indicate it's clickable */
+            transition: max-width 0.3s ease-out, padding 0.3s ease-out, box-shadow 0.3s ease-out, background-color 0.3s ease-out, border 0.3s ease-out, border-radius 0.3s ease-out; /* Added transitions for new properties */
+        }
+
+        /* State when expanded */
+        .notepad-container.expanded {
+            background-color: #fff; /* Re-add background when expanded */
+            max-width: 350px; /* Max width when expanded */
+            padding: 15px; /* Restore padding when expanded */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More prominent shadow when expanded */
+            cursor: default; /* Not clickable for expansion anymore */
+            border: 1px solid #ddd; /* Restore standard border color when expanded */
+            border-radius: 8px; /* Less rounded when expanded */
+        }
+
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0; /* No bottom margin when collapsed */
+            padding-bottom: 0; /* No bottom padding when collapsed */
+            border-bottom: none; /* No border when collapsed */
+            user-select: none; /* Prevent text selection on click */
+        }
+
+        .notepad-container.expanded .header-section { /* Styles when expanded */
+            margin-bottom: 5px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+            font-size: 1.1em; /* Slightly smaller initial title font */
+            line-height: 1; /* Tighter line height */
+            white-space: nowrap; /* Keep title on one line initially */
+            display: flex;
+            align-items: center;
+            gap: 4px; /* Reduced gap */
+        }
+        h1 span {
+            display: inline; /* Keep on same line as 'My' initially */
+            font-size: 1em; /* Same size as 'My' */
+        }
+        .notepad-container.expanded h1 { /* Restore larger font and multi-line when expanded */
+            font-size: 1.4em;
+            white-space: normal;
+            line-height: 1.2;
+        }
+        .notepad-container.expanded h1 span {
+            display: block; /* Make "To-Do List" go to next line when expanded */
+            font-size: 0.8em;
+            line-height: 1;
+        }
+
+
+        #currentDateDisplay {
+            text-align: right;
+            color: #666;
+            font-size: 0.8em; /* Restore to a slightly larger size when visible */
+            margin-bottom: 15px; /* Add margin below it when visible */
+            white-space: nowrap;
+        }
+
+
+        .toggle-app-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em; /* Slightly smaller toggle icon */
+            color: #007bff;
+            padding: 0 5px;
+            transition: transform 0.3s ease;
+            margin-left: 4px; /* Reduced margin */
+            font-weight: bold;
+        }
+
+        .toggle-app-button:hover {
+            color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .content-wrapper {
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, padding 0.3s ease-in-out, margin 0.3s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+            max-height: 1000px;
+            padding-top: 10px; /* Padding when expanded */
+        }
+
+        .content-wrapper.hidden-app {
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+
+        .todo-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .todo-input-container input[type="text"],
+        .todo-input-container input[type="time"],
+        .todo-input-container input[type="date"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .todo-input-container input[type="text"] {
+            flex-grow: 1;
+            min-width: 100px;
+        }
+
+        .todo-input-container input[type="time"] {
+            width: 100px;
+        }
+
+        .todo-input-container input[type="date"] {
+            width: 130px;
+        }
+
+        .todo-input-container button,
+        .control-buttons button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .todo-input-container button:hover,
+        .control-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .control-buttons {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .control-buttons button.save-list-btn {
+            background-color: #28a745;
+        }
+        .control-buttons button.save-list-btn:hover {
+            background-color: #218838;
+        }
+
+      ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 0;
+            padding-top: 15px;
+            /* Change 'dashed' to 'solid' if you want it solid, or remove if you want no line */
+            border-top: 1px solid #eee; /* Changed to solid and lighter color to match header */
+            /* If you want NO line, comment out or remove the 'border-top' line entirely */
+        }
+
+        ul li {
+            background-color: transparent;
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        ul li.completed {
+            text-decoration: line-through;
+            color: #888;
+            background-color: #e9e9e9;
+        }
+
+        .task-details {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: calc(100% - 110px);
+        }
+
+        .task-date, .task-time {
+            font-weight: bold;
+            color: #555;
+            margin-right: 8px;
+            white-space: nowrap;
+            font-size: 0.85em;
+        }
+
+        .task-date {
+            min-width: 90px;
+        }
+        .task-time {
+            min-width: 60px;
+        }
+
+       .task-text {
+            flex-grow: 1;
+            color: #333; /* Ensure default task text is dark */
+        }
+
+        .task-text.editing {
+            border: none;
+            padding: 0;
+            background-color: transparent;
+            outline: none;
+            color: #000 !important; /* Force black text when editing with !important */
+            /* Add a temporary background to debug if still invisible: */
+            /* background-color: rgba(255, 255, 0, 0.2) !important; */
+        }
+
+        .todo-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-left: 5px;
+            padding: 3px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+
+        .todo-actions .complete-btn {
+            color: #28a745;
+        }
+        .todo-actions .delete-btn {
+            color: #dc3545;
+        }
+        .todo-actions .edit-btn,
+        .todo-actions .save-edit-btn {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div id="notepadContainer" class="notepad-container">
+        <div class="header-section" onclick="toggleAppContent()">
+            <h1>🗓️ My <span style="color: yellow;">To-Do List</span></h1>
+            <button class="toggle-app-button" id="toggleAppButton">-</button>
+        </div>
+
+        <div id="appContentWrapper" class="content-wrapper hidden-app">
+            <p id="currentDateDisplay"></p>
+            <div class="todo-input-container">
+                <input type="date" id="todoDate" placeholder="date">
+                <input type="time" id="todoTime" placeholder="time">
+                <input type="text" id="todoInput" placeholder="Add a new to-do...">
+                <button onclick="addTodo()">Add Task</button>
+            </div>
+
+            <div class="control-buttons">
+                <button class="save-list-btn" onclick="saveTodoList()">💾 Save List</button>
+            </div>
+
+            <ul id="todoList">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        const LOCAL_STORAGE_KEY = 'myDailyTodoList';
+        const APP_CONTENT_WRAPPER_ID = 'appContentWrapper';
+        const NOTEPAD_CONTAINER_ID = 'notepadContainer';
+
+        function displayCurrentDate() {
+            const dateElement = document.getElementById('currentDateDisplay');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            dateElement.textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString + 'T00:00:00');
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function renderTodoItem(text, time, date, completed) {
+            const todoList = document.getElementById('todoList');
+            const listItem = document.createElement('li');
+
+            if (completed) {
+                listItem.classList.add('completed');
+            }
+
+            const formattedTime = time ? `<span class="task-time">${time}</span>` : '';
+            const formattedDate = date ? `<span class="task-date">${formatDisplayDate(date)}</span>` : '';
+
+            listItem.innerHTML = `
+                <div class="task-details">
+                    ${formattedDate}
+                    ${formattedTime}
+                    <span class="task-text" contenteditable="false">${text}</span>
+                </div>
+                <div class="todo-actions">
+                    <button class="complete-btn" onclick="toggleComplete(this)">✔️</button>
+                    <button class="edit-btn" onclick="editTodo(this)">✏️</button>
+                    <button class="delete-btn" onclick="deleteTodo(this)">✖️</button>
+                </div>
+            `;
+            listItem.dataset.text = text;
+            listItem.dataset.time = time;
+            listItem.dataset.date = date;
+            listItem.dataset.completed = completed;
+
+            todoList.appendChild(listItem);
+        }
+
+        function addTodo() {
+            const todoInput = document.getElementById('todoInput');
+            const todoTimeInput = document.getElementById('todoTime');
+            const todoDateInput = document.getElementById('todoDate');
+
+            const todoText = todoInput.value.trim();
+            const todoTime = todoTimeInput.value;
+            const todoDate = todoDateInput.value;
+
+            if (todoText === '') {
+                alert('Please enter a to-do item!');
+                return;
+            }
+
+            renderTodoItem(todoText, todoTime, todoDate, false);
+
+            todoInput.value = '';
+            todoTimeInput.value = '';
+            todoDateInput.value = '';
+
+            saveTodoList();
+        }
+
+        function toggleComplete(button) {
+            const listItem = button.closest('li');
+            listItem.classList.toggle('completed');
+            listItem.dataset.completed = listItem.classList.contains('completed');
+            saveTodoList();
+        }
+
+        function deleteTodo(button) {
+            const listItem = button.closest('li');
+            listItem.remove();
+            saveTodoList();
+        }
+
+        function editTodo(button) {
+            const listItem = button.closest('li');
+            const taskTextSpan = listItem.querySelector('.task-text');
+
+            if (taskTextSpan.contentEditable === 'false' || taskTextSpan.contentEditable === false) {
+                taskTextSpan.contentEditable = true;
+                taskTextSpan.focus();
+                taskTextSpan.classList.add('editing');
+                button.textContent = '💾';
+                button.classList.remove('edit-btn');
+                button.classList.add('save-edit-btn');
+            } else {
+                taskTextSpan.contentEditable = false;
+                taskTextSpan.classList.remove('editing');
+                button.textContent = '✏️';
+                button.classList.remove('save-edit-btn');
+                button.classList.add('edit-btn');
+
+                listItem.dataset.text = taskTextSpan.textContent;
+                saveTodoList();
+            }
+        }
+
+        function saveTodoList() {
+            const todoListElement = document.getElementById('todoList');
+            const listItems = todoListElement.querySelectorAll('li');
+            const todos = [];
+
+            listItems.forEach(item => {
+                todos.push({
+                    text: item.dataset.text,
+                    time: item.dataset.time,
+                    date: item.dataset.date,
+                    completed: item.dataset.completed === 'true'
+                });
+            });
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
+            console.log("To-do list saved!");
+        }
+
+        function loadTodoList() {
+            const savedTodos = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedTodos) {
+                const todos = JSON.parse(savedTodos);
+                document.getElementById('todoList').innerHTML = '';
+                todos.forEach(todo => {
+                    renderTodoItem(todo.text, todo.time, todo.date, todo.completed);
+                });
+                console.log("To-do list loaded!");
+            }
+        }
+
+        function toggleAppContent() {
+            const notepadContainer = document.getElementById(NOTEPAD_CONTAINER_ID);
+            const appContentWrapper = document.getElementById(APP_CONTENT_WRAPPER_ID);
+            const toggleButton = document.getElementById('toggleAppButton');
+
+            appContentWrapper.classList.toggle('hidden-app');
+            notepadContainer.classList.toggle('expanded');
+
+            if (appContentWrapper.classList.contains('hidden-app')) {
+                toggleButton.textContent = '+';
+            } else {
+                toggleButton.textContent = '-';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDate();
+            loadTodoList();
+            document.getElementById('toggleAppButton').textContent = '+';
+        });
+    </script>
+</body>
+</html>

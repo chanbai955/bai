@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Countdown</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      background: #000;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    .cd_container {
+      width: 450px;
+      color: #FFFF00;
+      display: inline-block;
+      height: 150px;
+      font-size: 30px;
+      text-align: center;
+      perspective: 1000px;
+    }
+
+    .countdown_section {
+      display: inline-block;
+      margin: 0 5px;
+      transform-style: preserve-3d;
+      transform: rotateX(15deg);
+    }
+
+    .countdown_amount {
+      font-size: 40px;
+      font-weight: bold;
+      color: #00ffcc;
+      text-shadow:
+        1px 1px 0 #0ff,
+        2px 2px 2px #00f,
+        0 0 10px #0ff,
+        0 0 20px #0ff;
+      transform: rotateX(10deg);
+      display: inline-block;
+    }
+
+    .event_title {
+      font-size: 150%;
+      margin-top: 5px;
+      color: white;
+      text-shadow: 1px 1px 2px #444;
+    }
+
+    .sep {
+      font-weight: bold;
+      padding: 0 5px;
+      color: white;
+    }
+
+    .cd_timer {
+      transform: rotateX(10deg);
+      margin-top: 10px;
+    }
+
+    .travel_date {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffcc00;
+      margin-top: 15px;
+      text-shadow: 1px 1px 1px #333;
+    }
+  </style>
+</head>
+<body>
+
+<div class="cd_container" data-target="2025-09-19T00:00:00">
+  <div class="cd_info">
+    <div class="event_text">
+      <p class="event_title">Road to India 2025</p>
+    </div>
+
+    <div class="cd_timer">
+      <span class="countdown_section">
+        <span class="countdown_amount days">--</span><br />day
+      </span>
+      <span class="sep">:</span>
+      <span class="countdown_section">
+        <span class="countdown_amount hours">--</span><br />hrs
+      </span>
+      <span class="sep">:</span>
+      <span class="countdown_section">
+        <span class="countdown_amount minutes">--</span><br />min
+      </span>
+      <span class="sep">:</span>
+      <span class="countdown_section">
+        <span class="countdown_amount seconds">--</span><br />sec
+      </span>
+    </div>
+
+    <div class="travel_date">
+      <span style="color:blue;">Travel day:</span> 19/9/2025
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const containers = document.querySelectorAll('.cd_container');
+
+    function updateCountdowns() {
+      const now = Date.now();
+      containers.forEach(container => {
+        const target = new Date(container.dataset.target).getTime();
+        const dist = target - now;
+        const timer = container.querySelector('.cd_timer');
+
+        if (dist < 0) {
+          timer.textContent = "Event Started";
+          return;
+        }
+
+        const days = Math.floor(dist / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((dist % (1000 * 60)) / 1000);
+
+        container.querySelector('.days').textContent = days;
+        container.querySelector('.hours').textContent = String(hours).padStart(2, '0');
+        container.querySelector('.minutes').textContent = String(minutes).padStart(2, '0');
+        container.querySelector('.seconds').textContent = String(seconds).padStart(2, '0');
+      });
+    }
+
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+  });
+</script>
+
+</body>
+</html>
+

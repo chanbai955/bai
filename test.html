@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Consolidated App Links</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #sidebar {
+            width: 220px;
+            background-color: #333; /* Dark sidebar */
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+            display: flex;
+            flex-direction: column; /* Arrange items vertically */
+        }
+        #sidebar h2 {
+            text-align: center;
+            color: #007bff; /* Accent color for title */
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            flex-grow: 1; /* Allow the list to take available space */
+        }
+        #sidebar li {
+            margin-bottom: 10px;
+        }
+        #sidebar a {
+            display: block;
+            padding: 12px 15px;
+            background-color: #444; /* Slightly lighter background for links */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        #sidebar a:hover {
+            background-color: #007bff; /* Highlight on hover */
+            transform: translateX(5px); /* Slight shift on hover */
+        }
+
+        #main-content {
+            flex-grow: 1; /* Allow main content to take up remaining space */
+            padding: 20px 40px;
+            background-color: #fff;
+            overflow-y: auto; /* Enable scrolling for content if needed */
+            display: flex;
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            text-align: center;
+        }
+
+        #welcome-box {
+            max-width: 500px;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #welcome-box h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        #welcome-box p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>My App</h2>
+        <ul>
+            <li><a href="run.html" target="_blank">Run Tracker</a></li>
+            <li><a href="utilities.html" target="_blank">Utilities</a></li>
+            <li><a href="travelchecklist.html" target="_blank">Travel Checklist</a></li>
+            <li><a href="debtors.html" target="_blank">Debtors</a></li>
+            <li><a href="trip-expenses.html" target="_blank">Trip Expenses</a></li>
+        </ul>
+    </div>
+
+    <div id="main-content">
+        <div id="welcome-box">
+            <h1>Welcome to My App!</h1>
+            <p>Select an option from the left sidebar to open your applications.</p>
+            <p>Each application will open in a new tab for a clean experience.</p>
+        </div>
+    </div>
+</body>
+</html>

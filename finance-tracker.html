@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monthly Finance Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      background: #f4f4f4;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background: #eee;
+    }
+    input[type="text"], input[type="number"] {
+      width: 95%;
+      padding: 5px;
+    }
+    .buttons {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .buttons button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .add-income { background: #4CAF50; color: white; }
+    .add-expense { background: #f44336; color: white; }
+    .clear-data { background: #999; color: white; }
+    .save-data { background: #2196F3; color: white; }
+    .summary {
+      background: #fff;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .action-buttons button {
+      margin-left: 4px;
+      padding: 2px 8px;
+    }
+    
+    .delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+.delete-btn:hover {
+  opacity: 0.7;
+}
+
+  </style>
+</head>
+<body>
+  <h2>Monthly Finance Tracker</h2>
+
+  <div>
+    <label for="monthSelect">Month:</label>
+    <select id="monthSelect"></select>
+    <label for="yearSelect">Year:</label>
+    <select id="yearSelect"></select>
+  </div>
+
+  <h3>Income</h3>
+  <table id="incomeTable">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Amount (RM)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="add-income" onclick="addRow('income')">➕ Add Income</button>
+
+  <h3>Expenses</h3>
+  <table id="expenseTable">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Amount (RM)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="add-expense" onclick="addRow('expense')">➕ Add Expense</button>
+
+  <div class="summary">
+    <p><strong>Total Income:</strong> RM <span id="totalIncome">0.00</span></p>
+    <p><strong>Total Expenses:</strong> RM <span id="totalExpenses">0.00</span></p>
+    <p><strong>Balance:</strong> RM <span id="balance">0.00</span></p>
+    <p><strong>Status:</strong> <span id="status">Profit</span></p>
+  </div>
+
+  <div class="buttons">
+    <button class="clear-data" onclick="clearAmounts()">🧹 Clear The Amounts </button>
+    <button class="save-data" onclick="saveData()">💾 </button>
+  </div>
+
+  <script>
+    const monthSelect = document.getElementById("monthSelect");
+    const yearSelect = document.getElementById("yearSelect");
+
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    function initMonthYear() {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      months.forEach((m, i) => {
+        const option = new Option(m, m);
+        if (i === currentMonth) option.selected = true;
+        monthSelect.appendChild(option);
+      });
+
+      for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+        const option = new Option(y, y);
+        if (y === currentYear) option.selected = true;
+        yearSelect.appendChild(option);
+      }
+    }
+
+    function getKey() {
+      return `finance_${monthSelect.value}_${yearSelect.value}`;
+    }
+
+    function addRow(type, desc = "", amount = 0) {
+      const table = document.getElementById(type + "Table").querySelector("tbody");
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" value="${desc}" /></td>
+        <td><input type="number" value="${amount}" min="0" oninput="updateTotals()" /></td>
+        <td class="action-buttons">
+         <button onclick="deleteRow(this)" class="delete-btn">🗑️</button>
+
+        </td>
+      `;
+      table.appendChild(row);
+      updateTotals();
+    }
+
+    function deleteRow(btn) {
+      const row = btn.closest("tr");
+      row.remove();
+      updateTotals();
+    }
+
+    function updateTotals() {
+      let income = 0, expense = 0;
+
+      document.querySelectorAll("#incomeTable tbody tr").forEach(row => {
+        income += parseFloat(row.cells[1].querySelector("input").value) || 0;
+      });
+
+      document.querySelectorAll("#expenseTable tbody tr").forEach(row => {
+        expense += parseFloat(row.cells[1].querySelector("input").value) || 0;
+      });
+
+      const balance = income - expense;
+      const status = balance >= 0 ? "Profit" : "Loss";
+
+      document.getElementById("totalIncome").textContent = income.toFixed(2);
+      document.getElementById("totalExpenses").textContent = expense.toFixed(2);
+      document.getElementById("balance").textContent = balance.toFixed(2);
+      document.getElementById("status").textContent = status;
+
+      localStorage.setItem(getKey(), JSON.stringify({ incomeData: getData("income"), expenseData: getData("expense") }));
+    }
+
+    function getData(type) {
+      const data = [];
+      document.querySelectorAll(`#${type}Table tbody tr`).forEach(row => {
+        data.push([
+          row.cells[0].querySelector("input").value,
+          parseFloat(row.cells[1].querySelector("input").value) || 0
+        ]);
+      });
+      return data;
+    }
+
+    function loadData() {
+      const stored = localStorage.getItem(getKey());
+      const incomeTbody = document.querySelector("#incomeTable tbody");
+      const expenseTbody = document.querySelector("#expenseTable tbody");
+
+      incomeTbody.innerHTML = "";
+      expenseTbody.innerHTML = "";
+
+      if (!stored) {
+        updateTotals();
+        return;
+      }
+
+      const { incomeData, expenseData } = JSON.parse(stored);
+      incomeData.forEach(([desc, amount]) => addRow("income", desc, amount));
+      expenseData.forEach(([desc, amount]) => addRow("expense", desc, amount));
+    }
+
+    function clearAmounts() {
+      document.querySelectorAll("#incomeTable tbody tr").forEach(row => {
+        row.cells[1].querySelector("input").value = 0;
+      });
+      document.querySelectorAll("#expenseTable tbody tr").forEach(row => {
+        row.cells[1].querySelector("input").value = 0;
+      });
+      updateTotals();
+    }
+
+    function saveData() {
+      const incomeData = getData("income");
+      const expenseData = getData("expense");
+
+      const totalIncome = document.getElementById("totalIncome").textContent;
+      const totalExpenses = document.getElementById("totalExpenses").textContent;
+      const balance = document.getElementById("balance").textContent;
+      const status = document.getElementById("status").textContent;
+
+      let content = `Monthly Finance Tracker - ${monthSelect.value} ${yearSelect.value}\n\n`;
+      content += "Income:\n";
+      incomeData.forEach(([desc, amount]) => {
+        content += ` - ${desc || "(no label)"}: RM ${amount.toFixed(2)}\n`;
+      });
+
+      content += "\nExpenses:\n";
+      expenseData.forEach(([desc, amount]) => {
+        content += ` - ${desc || "(no label)"}: RM ${amount.toFixed(2)}\n`;
+      });
+
+      content += `\nTotal Income: RM ${totalIncome}\n`;
+      content += `Total Expenses: RM ${totalExpenses}\n`;
+      content += `Balance: RM ${balance}\n`;
+      content += `Status: ${status}\n`;
+
+      const blob = new Blob([content], { type: "text/plain" });
+      const filename = `finance_${monthSelect.value}_${yearSelect.value}.txt`;
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    monthSelect.addEventListener("change", loadData);
+    yearSelect.addEventListener("change", loadData);
+
+    initMonthYear();
+    loadData();
+  </script>
+</body>
+</html>
+

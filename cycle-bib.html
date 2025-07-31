@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Riding Bib</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* Light background for the page */
+        }
+        .bib-container {
+            width: 800px; /* Adjust as needed */
+            height: 600px; /* Adjust as needed */
+            background-color: #3f3b6d; /* Dark blue background, similar to the image */
+            background-image: linear-gradient(to bottom right, #3f3b6d, #2a284a); /* Subtle gradient */
+            color: #ffffff; /* White text color */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .decorative-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .shape1 {
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 70%;
+            height: 70%;
+            background-color: #5ac77a; /* Green color */
+            transform: rotate(45deg);
+            opacity: 0.2;
+        }
+        .shape2 {
+            position: absolute;
+            bottom: -20%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background-color: #79d694; /* Lighter green */
+            transform: rotate(-30deg);
+            opacity: 0.2;
+        }
+
+        .header {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 1;
+        }
+        .header span {
+    /* Modified styles for "IS FUN" */
+    display: block;
+    font-size: 0.5em; /* Original was 0.3em, already made bigger */
+    font-family: 'Georgia', serif; /* Already set to a fancier font */
+    margin-top: -5px; 
+    letter-spacing: 0;
+    font-weight: bold; /* Already set to bold */
+}
+        .running-shoes {
+            width: 150px; /* Adjust size as needed */
+            margin-top: 10px;
+            z-index: 1;
+        }
+        .bib-number {
+            font-size: 10em; /* Large number size */
+            font-weight: bold;
+            color: #ffffff; /* White color for the number */
+            letter-spacing: -5px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+        .runner-name {
+            font-size: 3em; /* Name size */
+            font-weight: normal;
+            margin-top: -30px; /* Adjust spacing */
+            color: #ffffff;
+            z-index: 1;
+        }
+        .motto {
+            text-align: center;
+            font-size: 14px; /* Motto size */
+            font-weight: bold;
+            line-height: 1.2;
+            z-index: 1;
+        }
+        .motto span {
+            display: block;
+            font-size: 0.8em;
+            font-weight: normal;
+        }
+        /* New container for logos */
+        .logo-container {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            display: flex; /* Use flexbox */
+            gap:2px; /* Space between logos */
+            z-index: 1;
+        }
+        .logo-container img { /* Style for individual logos inside the container */
+            width: 100px; /* Adjust logo size */
+            height: auto;
+        }
+
+
+         /* New style for Running Logo 1 */
+    .logo-container .logo-first {
+        position: absolute; /* Needed for `left` and `bottom` to work */
+        bottom: 0px; /* Adjust as needed to align with other logos */
+        left: -320px;  /* Moves it to the left side */
+        width: 120px; /* Adjust size as needed */
+        height: auto;
+        z-index: 1; /* Ensure it's above decorative shapes */
+    }
+   
+        /* New style for moving Run-loc2.png down and making it bigger */
+        .logo-container .logo-second {
+           transform: translate(80px, 169px); /* Adjust this value to move it down */
+            width: 120px; /* Increased from 100px to 110px */
+        }
+
+
+        /* New style for moving run-bg3.png down and making it bigger */
+        .logo-container .logo-third {
+            transform: translateY(80px); /* Adjust this value to move it down */
+            width: 200px; /* Increased from 100px to 110px */
+        }
+        
+        /* --- EDITABLE SECTIONS --- */
+
+        /* Main Bib Colors */
+        .bib-container.color-theme-1 { /* Default Theme */
+            background-color: #3f3b6d;
+            background-image: linear-gradient(to bottom right, #3f3b6d, #2a284a);
+            color: #ffffff;
+        }
+        .bib-container.color-theme-2 { /* Example Theme 2: Red and Black */
+            background-color: #4a0000;
+            background-image: linear-gradient(to bottom right, #8b0000, #4a0000);
+            color: #ffffff;
+        }
+        .bib-container.color-theme-3 { /* Example Theme 3: Blue and Light Blue */
+            background-color: #003366;
+            background-image: linear-gradient(to bottom right, #0055aa, #003366);
+            color: #e0f2f7;
+        }
+
+        /* Decorative Shapes Colors */
+        .bib-container.color-theme-1 .shape1 { background-color: #5ac77a; } /* Green */
+        .bib-container.color-theme-1 .shape2 { background-color: #79d694; } /* Lighter green */
+
+        .bib-container.color-theme-2 .shape1 { background-color: #ff4d4d; } /* Bright Red */
+        .bib-container.color-theme-2 .shape2 { background-color: #ff9999; } /* Light Red */
+
+        .bib-container.color-theme-3 .shape1 { background-color: #66ccff; } /* Sky Blue */
+        .bib-container.color-theme-3 .shape2 { background-color: #99e6ff; } /* Lighter Sky Blue */
+
+        /* Bib Number Color */
+        .bib-number {
+            color: #ffffff; /* Default: White */
+        }
+        .bib-container.color-theme-2 .bib-number {
+            color: #ffe600; /* Yellow for Theme 2 */
+        }
+        .bib-container.color-theme-3 .bib-number {
+            color: #ffdd55; /* Gold for Theme 3 */
+        }
+
+        /* Running is Life / Motto Text Color */
+        .header, .motto {
+            color: #ffffff; /* Default: White */
+        }
+        .bib-container.color-theme-2 .header,
+        .bib-container.color-theme-2 .motto {
+            color: #f0f0f0; /* Slightly off-white for Theme 2 */
+        }
+        .bib-container.color-theme-3 .header,
+        .bib-container.color-theme-3 .motto {
+            color: #ffffff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="bib-container color-theme-1" id="myBib">
+        <div class="decorative-shapes">
+            <div class="shape1"></div>
+            <div class="shape2"></div>
+        </div>
+
+        <div class="header">
+            CYCLE
+            <span>The Stress Away..</span>
+        </div>
+        <img src="https://pngimg.com/uploads/running_shoes/running_shoes_PNG5798.png" alt="Running Shoes" class="running-shoes" id="shoesImage">
+
+        <div class="bib-number" id="bibNumber">C1970</div>
+        <div class="runner-name" id="runnerName">CHANTHIRAN</div>
+
+        <div class="motto">
+            IF WE BRAKE
+               WE DON'T MOVE...
+            
+        </div>
+        <div class="logo-container">
+            <img src="https://i.imgur.com/fGasxuV.png" alt="Cycle Logo 1" class="logo-first"> 
+            <img src="https://i.imgur.com/tlr5y85.png" alt="Cycle Logo 2" class="logo-second"> 
+            <img src="https://i.imgur.com/b7ufToc.png" alt="Cycle Logo 3" class="logo-third">
+        </div>
+    </div>
+
+    <script>
+        // --- HOW TO EDIT ---
+
+        // 1. Change Rider Name
+        document.getElementById('runnerName').textContent = 'CHANTHIRAN'; 
+        // 2. Change Bib Number
+        document.getElementById('bibNumber').textContent = 'C1970'; // e.g., '54321'
+
+        // 3. Change Logo (Bottom Right) - Now handled by the logo-container
+        // To change individual logos, modify the `src` attribute within the `logo-container` div directly.
+
+        // 4. Change Running Shoes Image (Optional)
+        // The original image URL in the HTML is: "https://pngimg.com/uploads/running_shoes/running_shoes_PNG5798.png"
+        // If you want to use a different image, uncomment the line below and replace the URL.
+        // If you want the default image to show, ensure this line is commented out.
+        // document.getElementById('shoesImage').src = 'YOUR_CUSTOM_SHOES_IMAGE_URL_HERE';
+
+
+        // 5. Change Color Theme
+        // To change the color scheme, uncomment (remove //) one of the lines below.
+        // You can also create your own color themes in the <style> section.
+        const bib = document.getElementById('myBib');
+        bib.classList.remove('color-theme-1'); // Remove default theme
+
+        // bib.classList.add('color-theme-1'); // Default Theme (Green/Blue)
+        bib.classList.add('color-theme-2'); // Red/Black Theme
+        // bib.classList.add('color-theme-3'); // Blue/Light Blue Theme
+
+        // Example: To use Theme 2:
+        // bib.classList.add('color-theme-2');
+    </script>
+</body>
+</html>

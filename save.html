@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Savings App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9fbfd;
+            border-radius: 8px;
+            border: 1px solid #eef2f5;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        button {
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+        }
+
+        input[type="date"] {
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button.secondary-btn {
+            background-color: #6c757d;
+        }
+
+        button.secondary-btn:hover {
+            background-color: #5a6268;
+        }
+
+        button.danger-btn {
+            background-color: #dc3545;
+        }
+
+        button.danger-btn:hover {
+            background-color: #c82333;
+        }
+
+        button.edit-btn, button.delete-btn {
+            background-color: #ffc107; /* Warning yellow for edit */
+            color: #333;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            width: auto;
+            margin-top: 0; /* Override default button margin */
+        }
+        button.edit-btn:hover {
+            background-color: #e0a800;
+        }
+        button.delete-btn {
+            background-color: #dc3545; /* Danger red for delete */
+            color: white;
+            margin-left: 5px; /* Spacing between edit/delete */
+        }
+        button.delete-btn:hover {
+            background-color: #c82333;
+        }
+
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #a0cbed;
+            cursor: not-allowed;
+        }
+
+        .current-balance, .goal-summary {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .goal-summary span {
+            color: #007bff;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 25px;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            line-height: 25px;
+            font-weight: bold;
+            transition: width 0.6s ease-in-out;
+            font-size: 0.9em;
+        }
+
+        .transaction-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 5px; /* Spacing between elements when wrapping */
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-item span {
+            font-size: 0.95rem;
+        }
+
+        .transaction-item .amount.deposit {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .transaction-item .amount.withdrawal {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .transaction-controls {
+            display: flex;
+            gap: 5px; /* Space between edit and delete buttons */
+        }
+
+        /* Edit form within transaction item */
+        .edit-form {
+            display: none; /* Hidden by default */
+            width: 100%;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .edit-form.active {
+            display: flex; /* Show when active */
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .edit-form input {
+            flex-grow: 1;
+            min-width: 120px; /* Ensure inputs don't get too small */
+        }
+
+        .edit-form .edit-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: flex-end;
+        }
+        .edit-form .edit-buttons button {
+            width: auto; /* Reset width to auto for specific buttons */
+            flex-grow: 0;
+            margin-top: 0;
+            padding: 8px 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px; /* Space between buttons */
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex-grow: 1; /* Make buttons take equal width */
+            margin-top: 0; /* Remove default button margin-top */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                margin: 15px;
+                padding: 20px;
+            }
+            h1, h2 {
+                font-size: 1.8rem;
+            }
+            .form-group {
+                flex-direction: column;
+            }
+            input, button {
+                font-size: 0.95rem;
+            }
+            .button-group {
+                flex-direction: column; /* Stack buttons vertically on small screens */
+            }
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .transaction-item .amount {
+                margin-top: 5px;
+            }
+            .transaction-controls {
+                width: 100%;
+                justify-content: flex-end; /* Push buttons to the right */
+            }
+            .edit-form.active {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .edit-form .edit-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Savings Goal</h1>
+
+        <div class="section" id="goal-setting-section">
+            <h2>Set Your Goal</h2>
+            <div class="form-group">
+                <label for="goalName">Goal Name:</label>
+                <input type="text" id="goalName" placeholder="e.g., New Car Fund" required>
+            </div>
+            <div class="form-group">
+                <label for="totalGoalAmount">Total Goal Amount (RM):</label>
+                <input type="number" id="totalGoalAmount" min="1" placeholder="e.g., 10000" required>
+            </div>
+            <div class="form-group">
+                <label for="targetDate">Target Date:</label>
+                <input type="date" id="targetDate">
+            </div>
+            <button id="setGoalBtn">Set/Update Goal</button>
+        </div>
+
+        <div class="section" id="savings-progress-section" style="display: none;">
+            <h2>Current Progress</h2>
+            <div class="goal-summary">
+                Goal: <span id="displayGoalName"></span> | Target: RM <span id="displayTotalGoalAmount"></span> | Target Date: <span id="displayTargetDate"></span>
+            </div>
+            <div class="current-balance">
+                Current Saved: RM <span id="currentBalance">0.00</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">RM0.00</div>
+            </div>
+            <div class="goal-summary" style="margin-top: 15px; font-size: 1rem;">
+                Needed: RM <span id="neededAmount">0.00</span> | Remaining Days: <span id="remainingDays">0</span>
+            </div>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+            <h2>Add/Withdraw Savings</h2>
+            <div class="form-group">
+                <label for="transactionAmount">Amount (RM):</label>
+                <input type="number" id="transactionAmount" min="0.01" placeholder="e.g., 500">
+            </div>
+            <div class="form-group">
+                <label for="transactionType">Type:</label>
+                <select id="transactionType" style="padding: 12px 15px; border-radius: 6px; border: 1px solid #ced4da; font-size: 1rem; width: 100%;">
+                    <option value="deposit">Deposit</option>
+                    <option value="withdrawal">Withdrawal</option>
+                </select>
+            </div>
+            <button id="addTransactionBtn">Record Transaction</button>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+            <h2>Transaction History</h2>
+            <ul id="transactionList" class="transaction-list">
+                </ul>
+
+            <div class="button-group">
+                <button id="backToSettingsBtn" class="secondary-btn">Back to Goal Settings</button>
+                <button id="clearGoalBtn" class="danger-btn">Clear Goal & Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const goalNameInput = document.getElementById('goalName');
+        const totalGoalAmountInput = document.getElementById('totalGoalAmount');
+        const targetDateInput = document.getElementById('targetDate');
+        const setGoalBtn = document.getElementById('setGoalBtn');
+
+        const goalSettingSection = document.getElementById('goal-setting-section');
+        const savingsProgressSection = document.getElementById('savings-progress-section');
+
+        const displayGoalName = document.getElementById('displayGoalName');
+        const displayTotalGoalAmount = document.getElementById('displayTotalGoalAmount');
+        const displayTargetDate = document.getElementById('displayTargetDate');
+        const currentBalanceSpan = document.getElementById('currentBalance');
+        const progressBar = document.getElementById('progressBar');
+        const neededAmountSpan = document.getElementById('neededAmount');
+        const remainingDaysSpan = document.getElementById('remainingDays');
+
+        const transactionAmountInput = document.getElementById('transactionAmount');
+        const transactionTypeSelect = document.getElementById('transactionType');
+        const addTransactionBtn = document.getElementById('addTransactionBtn');
+        const transactionList = document.getElementById('transactionList');
+
+        const backToSettingsBtn = document.getElementById('backToSettingsBtn');
+        const clearGoalBtn = document.getElementById('clearGoalBtn');
+
+        // State Variables
+        let goal = JSON.parse(localStorage.getItem('savingsGoal')) || null;
+        let transactions = JSON.parse(localStorage.getItem('savingsTransactions')) || [];
+
+        // --- Helper function for British date format ---
+        function formatDateToBritish(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            // Use 'en-GB' locale for British date format (DD/MM/YYYY)
+            return date.toLocaleDateString('en-GB');
+        }
+
+        // Helper to format date for input[type="date"] (YYYY-MM-DD)
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // --- Functions ---
+
+        function saveGoal() {
+            localStorage.setItem('savingsGoal', JSON.stringify(goal));
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('savingsTransactions', JSON.stringify(transactions));
+        }
+
+        function calculateBalance() {
+            return transactions.reduce((total, t) => {
+                return t.type === 'deposit' ? total + t.amount : total - t.amount;
+            }, 0);
+        }
+
+        function updateProgress() {
+            if (!goal) {
+                goalSettingSection.style.display = 'block';
+                savingsProgressSection.style.display = 'none';
+                // Clear the goal setting inputs when no goal is set
+                goalNameInput.value = '';
+                totalGoalAmountInput.value = '';
+                targetDateInput.value = '';
+                return;
+            }
+
+            goalSettingSection.style.display = 'none';
+            savingsProgressSection.style.display = 'block';
+
+            const currentBalance = calculateBalance();
+            const totalGoalAmount = parseFloat(goal.totalAmount);
+
+            displayGoalName.textContent = goal.name;
+            displayTotalGoalAmount.textContent = totalGoalAmount.toFixed(2);
+            // Use the new formatting function for the target date
+            displayTargetDate.textContent = formatDateToBritish(goal.targetDate);
+            currentBalanceSpan.textContent = currentBalance.toFixed(2);
+
+            let progressPercentage = (currentBalance / totalGoalAmount) * 100;
+            if (progressPercentage > 100) progressPercentage = 100; // Cap at 100%
+            if (progressPercentage < 0) progressPercentage = 0; // Prevent negative
+
+            progressBar.style.width = `${progressPercentage}%`;
+            // Reverted this specific line to NOT have a space after RM
+            progressBar.textContent = `RM${currentBalance.toFixed(2)}`; 
+
+            // Update needed amount and remaining days
+            const needed = totalGoalAmount - currentBalance;
+            neededAmountSpan.textContent = needed > 0 ? needed.toFixed(2) : '0.00';
+
+            if (goal.targetDate) {
+                const targetDate = new Date(goal.targetDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time for accurate day calculation
+                targetDate.setHours(0, 0, 0, 0); // Reset time for accurate day calculation
+
+                const diffTime = targetDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                remainingDaysSpan.textContent = diffDays > 0 ? diffDays : '0 (Goal Met/Passed)';
+            } else {
+                remainingDaysSpan.textContent = 'N/A';
+            }
+
+            renderTransactions();
+        }
+
+        function renderTransactions() {
+            transactionList.innerHTML = ''; // Clear existing list
+            if (transactions.length === 0) {
+                transactionList.innerHTML = '<li style="text-align: center; color: #888;">No transactions yet.</li>';
+                return;
+            }
+
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by newest first
+
+            transactions.forEach((t, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('transaction-item');
+
+                const dateDisplay = formatDateToBritish(t.date);
+                const amountClass = t.type === 'deposit' ? 'deposit' : 'withdrawal';
+                const sign = t.type === 'deposit' ? '+' : '-';
+
+                listItem.innerHTML = `
+                    <span>${dateDisplay}</span>
+                    <span class="amount ${amountClass}">${sign}RM ${t.amount.toFixed(2)} (${t.type})</span>
+                    <div class="transaction-controls">
+                        <button class="edit-btn" data-index="${index}">Edit</button>
+                        <button class="delete-btn" data-index="${index}">Delete</button>
+                    </div>
+                    <div class="edit-form" id="editForm-${index}">
+                        <label>Amount:</label>
+                        <input type="number" class="edit-amount-input" value="${t.amount.toFixed(2)}" min="0.01">
+                        <label>Date:</label>
+                        <input type="date" class="edit-date-input" value="${formatDateForInput(t.date)}">
+                        <div class="edit-buttons">
+                            <button class="save-edit-btn" data-index="${index}">Save</button>
+                            <button class="cancel-edit-btn" data-index="${index}" class="secondary-btn">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                transactionList.appendChild(listItem);
+            });
+
+            // Add event listeners to newly rendered buttons
+            addTransactionButtonListeners();
+        }
+
+        function addTransactionButtonListeners() {
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.onclick = (event) => { // Use onclick to easily reassign
+                    const indexToDelete = parseInt(event.target.dataset.index);
+                    if (confirm('Are you sure you want to delete this transaction?')) {
+                        transactions.splice(indexToDelete, 1); // Remove from array
+                        saveTransactions();
+                        updateProgress(); // Re-render everything
+                    }
+                };
+            });
+
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const indexToEdit = parseInt(event.target.dataset.index);
+                    const editForm = document.getElementById(`editForm-${indexToEdit}`);
+
+                    // Hide all other edit forms
+                    document.querySelectorAll('.edit-form').forEach(form => {
+                        if (form !== editForm) {
+                            form.classList.remove('active');
+                        }
+                    });
+
+                    // Toggle current edit form
+                    editForm.classList.toggle('active');
+                };
+            });
+
+            document.querySelectorAll('.save-edit-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const indexToSave = parseInt(event.target.dataset.index);
+                    const editForm = document.getElementById(`editForm-${indexToSave}`);
+                    const newAmount = parseFloat(editForm.querySelector('.edit-amount-input').value);
+                    const newDate = editForm.querySelector('.edit-date-input').value; // YYYY-MM-DD format
+
+                    if (isNaN(newAmount) || newAmount <= 0) {
+                        alert('Please enter a valid positive amount.');
+                        return;
+                    }
+
+                    // Check for valid date format for input[type="date"]
+                    if (!newDate) {
+                        alert('Please select a valid date.');
+                        return;
+                    }
+
+                    // Update the transaction
+                    transactions[indexToSave].amount = newAmount;
+                    // Store date as ISO string again to maintain consistency
+                    transactions[indexToSave].date = new Date(newDate).toISOString();
+
+                    saveTransactions();
+                    updateProgress(); // Re-render the list and update totals
+                };
+            });
+
+            document.querySelectorAll('.cancel-edit-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const indexToCancel = parseInt(event.target.dataset.index);
+                    const editForm = document.getElementById(`editForm-${indexToCancel}`);
+                    editForm.classList.remove('active'); // Just hide the form
+                };
+            });
+        }
+
+        // --- Event Listeners ---
+
+        setGoalBtn.addEventListener('click', () => {
+            const name = goalNameInput.value.trim();
+            const totalAmount = parseFloat(totalGoalAmountInput.value);
+            const targetDate = targetDateInput.value;
+
+            if (!name || isNaN(totalAmount) || totalAmount <= 0) {
+                alert('Please enter a valid goal name and a positive total goal amount.');
+                return;
+            }
+
+            goal = {
+                name: name,
+                totalAmount: totalAmount,
+                targetDate: targetDate || null // Store null if no date selected
+            };
+            saveGoal();
+            updateProgress();
+
+            // Populate goal setting fields for future edits
+            goalNameInput.value = goal.name;
+            totalGoalAmountInput.value = goal.totalAmount;
+            targetDateInput.value = goal.targetDate;
+        });
+
+        addTransactionBtn.addEventListener('click', () => {
+            const amount = parseFloat(transactionAmountInput.value);
+            const type = transactionTypeSelect.value;
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid positive amount for the transaction.');
+                return;
+            }
+
+            const currentBalance = calculateBalance();
+            if (type === 'withdrawal' && amount > currentBalance) {
+                alert('Withdrawal amount cannot exceed current saved balance.');
+                return;
+            }
+
+            transactions.push({
+                amount: amount,
+                type: type,
+                date: new Date().toISOString() // Store ISO string for consistent parsing
+            });
+            saveTransactions();
+            updateProgress();
+
+            // Clear input
+            transactionAmountInput.value = '';
+        });
+
+        backToSettingsBtn.addEventListener('click', () => {
+            // Simply show the goal setting section and hide progress
+            goalSettingSection.style.display = 'block';
+            savingsProgressSection.style.display = 'none';
+        });
+
+        clearGoalBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear ALL goal data and transactions? This cannot be undone.')) {
+                goal = null;
+                transactions = [];
+                localStorage.removeItem('savingsGoal');
+                localStorage.removeItem('savingsTransactions');
+                updateProgress(); // Revert to initial state (goal setting view)
+                alert('All goal data has been cleared.');
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', updateProgress);
+
+        // Populate goal setting fields if a goal already exists on initial load
+        if (goal) {
+            goalNameInput.value = goal.name;
+            totalGoalAmountInput.value = goal.totalAmount;
+            targetDateInput.value = goal.targetDate;
+        }
+
+    </script>
+</body>
+</html>

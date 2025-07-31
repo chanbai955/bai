@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Debtors List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+      text-align: center;
+    }
+
+    .toggle-btn {
+      background: linear-gradient(to bottom, #3cb371, #2e8b57);
+      color: #fff;
+      font-weight: bold;
+      font-size: 18px;
+      padding: 14px 28px;
+      border: 2px solid #1e4f32;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow:
+        0 5px 0 #1e4f32,
+        0 10px 15px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s ease;
+    }
+
+    .toggle-btn:hover {
+      background: linear-gradient(to bottom, #4ccf81, #3cb371);
+    }
+
+    .toggle-btn:active {
+      transform: translateY(5px);
+      box-shadow:
+        0 2px 0 #1e4f32,
+        0 4px 6px rgba(0, 0, 0, 0.2),
+        inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    #debtor-section {
+      display: none;
+      margin-top: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #debtor-section.show {
+      display: block;
+      opacity: 1;
+    }
+
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .total-row {
+      background-color: #d4fcd4;
+      font-weight: bold;
+    }
+
+    .action-btn {
+      padding: 8px 14px;
+      margin: 2px;
+      border: 1px solid #888;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      background-image: linear-gradient(to bottom, #444, #222);
+      color: white;
+      box-shadow:
+        2px 2px 5px rgba(0, 0, 0, 0.4),
+        inset -1px -1px 2px rgba(255, 255, 255, 0.1),
+        inset 1px 1px 3px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .action-btn:hover {
+      box-shadow:
+        3px 3px 7px rgba(0, 0, 0, 0.5),
+        inset -1px -1px 1px rgba(255, 255, 255, 0.15),
+        inset 1px 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    .action-btn:active {
+      transform: translateY(3px);
+      box-shadow:
+        1px 1px 2px rgba(0, 0, 0, 0.3),
+        inset 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .add-btn {
+      background-image: linear-gradient(to bottom, #1f7f3f, #145a2a);
+      border-color: #0e3f1c;
+    }
+
+    .edit-btn {
+      background-image: linear-gradient(to bottom, #1e5da6, #123a70);
+      border-color: #0a274d;
+    }
+
+    .delete-btn {
+      background-image: linear-gradient(to bottom, #a62929, #6b1a1a);
+      border-color: #3d0e0e;
+    }
+
+    .add-form {
+      width: 600px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .add-form input {
+      padding: 6px;
+      font-size: 14px;
+      width: 40%;
+    }
+
+    .progress-container {
+      width: 100px;
+      background-color: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 18px;
+      margin: 0 auto;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, #4caf50, #2e7d32);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toggle Button -->
+<button class="toggle-btn" onclick="toggleDebtorSection()">Debtors - 2025</button>
+
+<!-- Debtors Section -->
+<div id="debtor-section">
+  <form id="add-form" class="add-form">
+    <input type="text" id="new-name" placeholder="Name" required />
+    <input type="number" id="new-amount" placeholder="Amount" required />
+    <button type="submit" class="action-btn add-btn">Add Debtor</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Amount (MYR)</th>
+        <th>Paid</th>
+        <th>Progress</th>
+        <th>Balance</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="debtors-body"></tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td>Total</td>
+        <td id="total-cell">0</td>
+        <td colspan="4"></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+  const tableBody = document.getElementById("debtors-body");
+  const totalCell = document.getElementById("total-cell");
+  const addForm = document.getElementById("add-form");
+  const nameInput = document.getElementById("new-name");
+  const amountInput = document.getElementById("new-amount");
+  const debtorSection = document.getElementById("debtor-section");
+
+  let debtors = JSON.parse(localStorage.getItem("debtorsList") || "[]");
+
+  function save() {
+    localStorage.setItem("debtorsList", JSON.stringify(debtors));
+  }
+
+  function updateTotal() {
+    
+  const total = debtors.reduce((sum, d) => sum + Math.max(0, d.amount - (d.paid || 0)), 0);
+  totalCell.textContent = total.toLocaleString("en-MY");
+}
+
+ 
+
+  function renderTable() {
+    tableBody.innerHTML = "";
+    debtors.forEach((debtor, index) => {
+      const row = document.createElement("tr");
+
+      const nameCell = document.createElement("td");
+      nameCell.textContent = debtor.name;
+
+      const amountCell = document.createElement("td");
+      amountCell.textContent = debtor.amount.toLocaleString("en-MY");
+
+      const paidCell = document.createElement("td");
+      const paidInput = document.createElement("input");
+      paidInput.type = "number";
+      paidInput.value = debtor.paid || 0;
+      paidInput.style.width = "70px";
+      paidInput.onchange = () => {
+        debtor.paid = Math.min(parseFloat(paidInput.value), debtor.amount);
+        save();
+        renderTable();
+      };
+      paidCell.appendChild(paidInput);
+
+      const progressCell = document.createElement("td");
+      const progressContainer = document.createElement("div");
+      progressContainer.className = "progress-container";
+      const progressBar = document.createElement("div");
+      progressBar.className = "progress-bar";
+      const percentage = Math.min((debtor.paid || 0) / debtor.amount * 100, 100);
+      progressBar.style.width = `${percentage}%`;
+      progressContainer.appendChild(progressBar);
+      progressCell.appendChild(progressContainer);
+
+      const balanceCell = document.createElement("td");
+      const balance = Math.max(0, debtor.amount - (debtor.paid || 0));
+      balanceCell.textContent = balance.toLocaleString("en-MY");
+
+      const actionCell = document.createElement("td");
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "action-btn delete-btn";
+      deleteBtn.onclick = () => {
+        if (confirm(`Delete ${debtor.name}?`)) {
+          debtors.splice(index, 1);
+          save();
+          renderTable();
+        }
+      };
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.className = "action-btn edit-btn";
+      editBtn.onclick = () => {
+        const newName = prompt("New name:", debtor.name);
+        const newAmount = prompt("New amount:", debtor.amount);
+        if (newName && !isNaN(newAmount)) {
+          debtors[index].name = newName.trim();
+          debtors[index].amount = parseFloat(newAmount);
+          if (debtors[index].paid > debtors[index].amount) {
+            debtors[index].paid = debtors[index].amount;
+          }
+          save();
+          renderTable();
+        }
+      };
+
+      actionCell.appendChild(editBtn);
+      actionCell.appendChild(deleteBtn);
+
+      row.appendChild(nameCell);
+      row.appendChild(amountCell);
+      row.appendChild(paidCell);
+      row.appendChild(progressCell);
+      row.appendChild(balanceCell);
+      row.appendChild(actionCell);
+      tableBody.appendChild(row);
+    });
+    updateTotal();
+  }
+
+  addForm.onsubmit = (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    if (name && !isNaN(amount)) {
+      debtors.push({ name, amount, paid: 0 });
+      save();
+      renderTable();
+      addForm.reset();
+    } else {
+      alert("Please enter valid name and amount.");
+    }
+  };
+
+  function toggleDebtorSection() {
+    debtorSection.classList.toggle("show");
+  }
+
+  renderTable();
+</script>
+
+</body>
+</html>
+

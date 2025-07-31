@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 20px;
+            box-sizing: border-box;
+        }
+
+        .notepad-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden; /* Ensure content doesn't spill during transition */
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px; /* Adjust as needed */
+            padding-bottom: 10px; /* Space above content */
+            border-bottom: 1px solid #eee; /* Separator line */
+        }
+
+        h1 {
+            color: #333;
+            margin: 0; /* Remove default margin from h1 */
+            font-size: 1.8em;
+        }
+
+        #currentDateDisplay {
+            text-align: right; /* Align date to the right in header */
+            color: #666;
+            font-size: 1em;
+            margin-left: auto; /* Push date to the right */
+        }
+
+        .toggle-app-button { /* Style for the new toggle button */
+            background: none; /* No background */
+            border: none; /* No border */
+            cursor: pointer;
+            font-size: 2em; /* Larger icon */
+            color: #007bff; /* Blue color */
+            padding: 0 10px; /* Some padding around icon */
+            transition: transform 0.3s ease; /* Smooth rotation */
+            margin-left: 10px; /* Space from title */
+        }
+
+        .toggle-app-button:hover {
+            color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .content-wrapper { /* New wrapper for content to be toggled */
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+            max-height: 1000px; /* Large enough value to show content */
+            padding-top: 15px; /* Space after header when visible */
+        }
+
+        .content-wrapper.hidden-app { /* Class to hide the content */
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            border-top: none; /* Remove border if collapsed */
+        }
+
+
+        .todo-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .todo-input-container input[type="text"],
+        .todo-input-container input[type="time"],
+        .todo-input-container input[type="date"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .todo-input-container input[type="text"] {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .todo-input-container input[type="time"] {
+            width: 130px;
+        }
+
+        .todo-input-container input[type="date"] {
+            width: 160px;
+        }
+
+        .todo-input-container button,
+        .control-buttons button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .todo-input-container button:hover,
+        .control-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .control-buttons {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 0; /* Remove bottom margin to prevent extra space */
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .control-buttons button.save-list-btn {
+            background-color: #28a745;
+        }
+        .control-buttons button.save-list-btn:hover {
+            background-color: #218838;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            background-color: #f9f9f9;
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        ul li.completed {
+            text-decoration: line-through;
+            color: #888;
+            background-color: #e9e9e9;
+        }
+
+        .task-details {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: calc(100% - 140px);
+        }
+
+        .task-date, .task-time {
+            font-weight: bold;
+            color: #555;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
+        .task-date {
+            min-width: 110px;
+        }
+        .task-time {
+            min-width: 70px;
+        }
+
+        .task-text {
+            flex-grow: 1;
+        }
+
+        .task-text.editing {
+            border: 1px solid #007bff;
+            padding: 5px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .todo-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin-left: 10px;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+
+        .todo-actions .complete-btn {
+            color: #28a745;
+        }
+
+        .todo-actions .complete-btn:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .todo-actions .delete-btn {
+            color: #dc3545;
+        }
+
+        .todo-actions .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .todo-actions .edit-btn,
+        .todo-actions .save-edit-btn {
+            color: #007bff;
+        }
+        .todo-actions .edit-btn:hover,
+        .todo-actions .save-edit-btn:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="notepad-container">
+        <div class="header-section">
+            <h1>🗓️ My To-Do List</h1>
+            <p id="currentDateDisplay"></p>
+            <button class="toggle-app-button" id="toggleAppButton" onclick="toggleAppContent()">➖</button>
+        </div>
+
+        <div id="appContentWrapper" class="content-wrapper"> <div class="todo-input-container">
+                <input type="date" id="todoDate">
+                <input type="time" id="todoTime">
+                <input type="text" id="todoInput" placeholder="Add a new to-do...">
+                <button onclick="addTodo()">Add Task</button>
+            </div>
+
+            <div class="control-buttons">
+                <button class="save-list-btn" onclick="saveTodoList()">💾 Save List</button>
+            </div>
+
+            <ul id="todoList">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        const LOCAL_STORAGE_KEY = 'myDailyTodoList';
+        const APP_CONTENT_WRAPPER_ID = 'appContentWrapper'; // ID for the new app content wrapper
+
+        function displayCurrentDate() {
+            const dateElement = document.getElementById('currentDateDisplay');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            dateElement.textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString + 'T00:00:00');
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function renderTodoItem(text, time, date, completed) {
+            const todoList = document.getElementById('todoList');
+            const listItem = document.createElement('li');
+
+            if (completed) {
+                listItem.classList.add('completed');
+            }
+
+            const formattedTime = time ? `<span class="task-time">${time}</span>` : '';
+            const formattedDate = date ? `<span class="task-date">${formatDisplayDate(date)}</span>` : '';
+
+            listItem.innerHTML = `
+                <div class="task-details">
+                    ${formattedDate}
+                    ${formattedTime}
+                    <span class="task-text" contenteditable="false">${text}</span>
+                </div>
+                <div class="todo-actions">
+                    <button class="complete-btn" onclick="toggleComplete(this)">✔️</button>
+                    <button class="edit-btn" onclick="editTodo(this)">✏️</button>
+                    <button class="delete-btn" onclick="deleteTodo(this)">✖️</button>
+                </div>
+            `;
+            listItem.dataset.text = text;
+            listItem.dataset.time = time;
+            listItem.dataset.date = date;
+            listItem.dataset.completed = completed;
+
+            todoList.appendChild(listItem);
+        }
+
+        function addTodo() {
+            const todoInput = document.getElementById('todoInput');
+            const todoTimeInput = document.getElementById('todoTime');
+            const todoDateInput = document.getElementById('todoDate');
+
+            const todoText = todoInput.value.trim();
+            const todoTime = todoTimeInput.value;
+            const todoDate = todoDateInput.value;
+
+            if (todoText === '') {
+                alert('Please enter a to-do item!');
+                return;
+            }
+
+            renderTodoItem(todoText, todoTime, todoDate, false);
+
+            todoInput.value = '';
+            todoTimeInput.value = '';
+            todoDateInput.value = '';
+
+            saveTodoList();
+        }
+
+        function toggleComplete(button) {
+            const listItem = button.closest('li');
+            listItem.classList.toggle('completed');
+            listItem.dataset.completed = listItem.classList.contains('completed');
+            saveTodoList();
+        }
+
+        function deleteTodo(button) {
+            const listItem = button.closest('li');
+            listItem.remove();
+            saveTodoList();
+        }
+
+        function editTodo(button) {
+            const listItem = button.closest('li');
+            const taskTextSpan = listItem.querySelector('.task-text');
+
+            if (taskTextSpan.contentEditable === 'false' || taskTextSpan.contentEditable === false) {
+                taskTextSpan.contentEditable = true;
+                taskTextSpan.focus();
+                taskTextSpan.classList.add('editing');
+                button.textContent = '💾';
+                button.classList.remove('edit-btn');
+                button.classList.add('save-edit-btn');
+            } else {
+                taskTextSpan.contentEditable = false;
+                taskTextSpan.classList.remove('editing');
+                button.textContent = '✏️';
+                button.classList.remove('save-edit-btn');
+                button.classList.add('edit-btn');
+
+                listItem.dataset.text = taskTextSpan.textContent;
+                saveTodoList();
+            }
+        }
+
+        // --- Local Storage Functions ---
+
+        function saveTodoList() {
+            const todoListElement = document.getElementById('todoList');
+            const listItems = todoListElement.querySelectorAll('li');
+            const todos = [];
+
+            listItems.forEach(item => {
+                todos.push({
+                    text: item.dataset.text,
+                    time: item.dataset.time,
+                    date: item.dataset.date,
+                    completed: item.dataset.completed === 'true'
+                });
+            });
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
+            console.log("To-do list saved!");
+        }
+
+        function loadTodoList() {
+            const savedTodos = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedTodos) {
+                const todos = JSON.parse(savedTodos);
+                document.getElementById('todoList').innerHTML = '';
+                todos.forEach(todo => {
+                    renderTodoItem(todo.text, todo.time, todo.date, todo.completed);
+                });
+                console.log("To-do list loaded!");
+            }
+        }
+
+        // --- New Toggle Function (for the entire app content) ---
+        function toggleAppContent() {
+            const appContentWrapper = document.getElementById(APP_CONTENT_WRAPPER_ID);
+            const toggleButton = document.getElementById('toggleAppButton');
+
+            appContentWrapper.classList.toggle('hidden-app'); // Toggle the 'hidden-app' class
+
+            // Change button text and icon based on visibility
+            if (appContentWrapper.classList.contains('hidden-app')) {
+                toggleButton.textContent = '➕'; // Plus icon for show
+            } else {
+                toggleButton.textContent = '➖'; // Minus icon for hide
+            }
+        }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDate();
+            loadTodoList();
+        });
+    </script>
+</body>
+</html>

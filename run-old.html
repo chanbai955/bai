@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f9fc;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .progress-container {
+      background: #ccc;
+      border-radius: 25px;
+      overflow: hidden;
+      height: 30px;
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      background: #3f51b5;
+      height: 100%;
+      color: white;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+    }
+
+    .goal-button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      margin: 10px auto;
+      display: block;
+    }
+
+    input[type="number"], input[type="date"] {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 80%;
+      margin: 10px auto;
+      display: block;
+    }
+
+    button {
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .add-btn { background: #4CAF50; color: white; }
+    .reset-btn { background: #e74c3c; color: white; }
+    .km-btn { background: #388e3c; color: white; }
+
+    #dueDateDisplay span {
+      font-size: 16px;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #countdownDisplay {
+      font-size: 16px;
+      animation: fadeInOut 3s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    .run-entry {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      padding: 10px 20px;
+      margin: 10px auto;
+      max-width: 500px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .edit-btn {
+      background: #1976d2;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .delete-btn {
+      background: #c62828;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-left: 5px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .close {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="modal-content">
+    <h2>Run Tracker</h2>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar">0.00 km</div>
+    </div>
+
+    <button class="goal-button" id="goalDisplay" disabled>🎯 Goal: 100 km</button>
+
+    <input type="number" id="goalInput" placeholder="Set your Goal (km)" />
+    <button class="km-btn" onclick="updateGoal()">➕ KM</button>
+
+    <input type="number" id="distanceInput" placeholder="Enter run distance (km)" />
+    <button class="add-btn" onclick="addDistance()">Add</button>
+    <button class="reset-btn" onclick="resetProgress()">Reset</button>
+
+    <input type="date" id="dueDateInput" onchange="setDueDate()" />
+    <p id="dueDateDisplay"></p>
+    <p id="countdownDisplay"></p>
+
+    <div id="details"></div>
+    <div id="history"></div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit Run Date</h3>
+      <input type="date" id="modalDateInput" />
+      <br><br>
+      <button onclick="saveEditDate()" style="background:#4CAF50; color:white; padding:10px 20px; border:none; border-radius:8px; font-weight:bold;">
+        💾 Save
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "runDistances";
+    const DUE_DATE_KEY = "runDueDate";
+    const GOAL_KEY = "runGoal";
+
+    let distances = [];
+    let totalGoal = parseFloat(localStorage.getItem(GOAL_KEY)) || 100;
+    let editIndex = null;
+
+    function updateGoal() {
+      const goalInput = document.getElementById("goalInput");
+      const value = parseFloat(goalInput.value);
+      if (!isNaN(value) && value > 0) {
+        totalGoal = value;
+        localStorage.setItem(GOAL_KEY, totalGoal);
+        updateGoalDisplay();
+        updateProgress();
+        goalInput.value = "";
+      }
+    }
+
+    function updateGoalDisplay() {
+      document.getElementById("goalDisplay").textContent = `🎯 Goal: ${totalGoal} km`;
+    }
+
+    function addDistance() {
+      const input = document.getElementById("distanceInput");
+      const value = parseFloat(input.value);
+      if (!isNaN(value) && value > 0) {
+        distances.push({ distance: value, date: new Date().toISOString() });
+        saveData();
+        updateProgress();
+        input.value = "";
+      }
+    }
+
+    function resetProgress() {
+      if (confirm("Reset all progress?")) {
+        distances = [];
+        localStorage.removeItem(STORAGE_KEY);
+        updateProgress();
+      }
+    }
+
+    function setDueDate() {
+      const input = document.getElementById("dueDateInput").value;
+      if (input) {
+        localStorage.setItem(DUE_DATE_KEY, input);
+        showDueDate(input);
+      }
+    }
+
+    function formatDateUK(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function showDueDate(dateStr) {
+      const display = document.getElementById("dueDateDisplay");
+      const countdown = document.getElementById("countdownDisplay");
+
+      const dueDate = new Date(dateStr);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+      display.innerHTML = `📅 <span style="color:#d32f2f; font-weight:bold;">Due Date:</span> <span style="color:#6a1b9a; font-style:italic; font-size:14px;">${formatDateUK(dateStr)}</span>`;
+
+      if (diffDays > 0) {
+        countdown.innerHTML = `⏳ <span style="color:#3f51b5; font-weight: bold;">${diffDays} day(s) remaining</span>`;
+      } else if (diffDays === 0) {
+        countdown.innerHTML = `🚨 <span style="color:#ff9800;">Today is the goal date!</span>`;
+      } else {
+        countdown.innerHTML = `❗ <span style="color:red;">Goal date passed by ${Math.abs(diffDays)} day(s)</span>`;
+      }
+    }
+
+    function updateProgress() {
+      const total = distances.reduce((sum, e) => sum + e.distance, 0);
+      const percent = Math.min((total / totalGoal) * 100, 100);
+
+      const bar = document.getElementById("progressBar");
+      bar.style.width = percent + "%";
+      bar.textContent = total.toFixed(2) + " km";
+
+      document.getElementById("details").innerHTML =
+        `<strong>Total Covered:</strong> ${total.toFixed(2)} km<br><strong>Remaining:</strong> ${(totalGoal - total).toFixed(2)} km`;
+
+      document.getElementById("history").innerHTML = distances.map((d, i) => `
+        <div class="run-entry">
+          <div><strong>Run ${i + 1}:</strong> <span style="color:#3f51b5; font-weight:bold;">${d.distance.toFixed(2)} km</span> on ${formatDateUK(d.date)}</div>
+          <div>
+            <button class="edit-btn" onclick="openEditModal(${i})">✏️ Edit</button>
+            <button class="delete-btn" onclick="deleteRun(${i})">🗑️ Del</button>
+          </div>
+        </div>`).join("");
+    }
+
+    function deleteRun(index) {
+      if (confirm("Delete this run entry?")) {
+        distances.splice(index, 1);
+        saveData();
+        updateProgress();
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(distances));
+    }
+
+    function openEditModal(index) {
+      editIndex = index;
+      document.getElementById("modalDateInput").value = new Date(distances[index].date).toISOString().split("T")[0];
+      document.getElementById("editModal").style.display = "block";
+    }
+
+    function closeEditModal() {
+      document.getElementById("editModal").style.display = "none";
+    }
+
+    function saveEditDate() {
+      const newDate = document.getElementById("modalDateInput").value;
+      if (newDate && editIndex !== null) {
+        distances[editIndex].date = new Date(newDate).toISOString();
+        saveData();
+        updateProgress();
+        closeEditModal();
+      }
+    }
+
+    function loadSavedData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) distances = JSON.parse(saved);
+
+      const savedDate = localStorage.getItem(DUE_DATE_KEY);
+      if (savedDate) {
+        document.getElementById("dueDateInput").value = savedDate;
+        showDueDate(savedDate);
+      }
+
+      const savedGoal = localStorage.getItem(GOAL_KEY);
+      if (savedGoal) totalGoal = parseFloat(savedGoal);
+
+      updateGoalDisplay();
+    }
+
+    loadSavedData();
+    updateProgress();
+  </script>
+</body>
+</html>
+

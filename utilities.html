@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Main Menu - Utilities</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    .menu {
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      padding: 16px;
+      border-radius: 16px;
+      color: #333;
+      max-width: 960px;
+      margin: auto;
+    }
+
+    .menu h3 {
+      margin: 0;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 600;
+      user-select: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: #2e7d32;
+      color: #fff;
+    }
+
+    .menu h3.pressed {
+      background: #1b5e20;
+    }
+
+    .submenu {
+      display: none;
+      margin-top: 12px;
+      background: #2e7d32; /* Green background for the whole submenu */
+      border-radius: 12px; /* Match the menu's border-radius */
+      padding: 10px 0; /* Adjust padding */
+    }
+
+    .menu.active .submenu {
+      display: block;
+    }
+
+    .toggle-arrow {
+      float: right;
+      transition: transform 0.3s;
+    }
+
+    .menu.active .toggle-arrow {
+      transform: rotate(90deg);
+    }
+
+    .section-title {
+      margin: 0; /* Remove default margin */
+      cursor: pointer;
+      font-size: 20px; /* Adjust font size to match h3 or make it slightly smaller */
+      font-weight: 600;
+      user-select: none;
+      padding: 8px 12px;
+      border-radius: 8px; /* Apply border-radius */
+      transition: all 0.2s ease;
+      background: #2e7d32; /* Green background */
+      color: #fff;
+      margin-top: 10px; /* Add some top margin to separate sections */
+      /* Remove border-bottom specific to section-title for image style */
+      border-bottom: none;
+      margin-bottom: 5px; /* Space between title and first submenu item */
+    }
+
+    .sub-section-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #fff; /* White text for contrast on green background */
+      padding: 8px 22px; /* Adjust padding to match the image, including indentation */
+      cursor: pointer;
+      position: relative;
+      background: #2e7d32; /* Ensure it stays green even without submenu background */
+      margin-left: 0; /* Remove previous indentation as padding handles it */
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.5); /* Dotted white line */
+    }
+
+    .sub-section-title:last-of-type {
+      border-bottom: none; /* No border on the last item */
+    }
+
+    .sub-section-title .toggle-condo-arrow {
+      float: right;
+      transition: transform 0.3s;
+      color: #fff; /* Ensure arrow is white */
+    }
+
+    .sub-section-title.active .toggle-condo-arrow {
+      transform: rotate(90deg);
+    }
+
+    /* Keep table styles for Banks and Bil */
+    table {
+      width: 100%;
+      background: #ffffff;
+      border-collapse: collapse;
+      color: #333;
+      font-size: 13px;
+      margin-top: 8px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 15px; /* Space after tables */
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid #e0f2f1;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e0f2f1;
+    }
+
+    /* Smaller input fields for User and Password */
+    input[type="text"].small-input,
+    input[type="password"].small-input {
+      padding: 4px 6px; /* Reduced padding */
+      font-size: 12px; /* Smaller font size */
+      width: 100%; /* Still take full width of their container */
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px; /* Slightly smaller border-radius */
+      background: #f9f9f9;
+    }
+
+    /* General input styles for other text inputs (like Unit No.) */
+    input[type="text"]:not(.small-input),
+    input[type="password"]:not(.small-input) {
+      padding: 6px 8px;
+      font-size: 13px;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 12px; /* Smaller eye icon */
+      cursor: pointer;
+      color: #2e7d32;
+    }
+
+    .link-button {
+      background: #2e7d32;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 6px;
+      margin-right: 8px;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .link-button:hover {
+      background: #1b5e20;
+    }
+
+    /* Styles for the condo details when opened */
+    .condo-details {
+      display: none;
+      padding-left: 20px;
+      margin-bottom: 15px;
+      background: #ffffff; /* White background for the details content */
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      padding: 10px;
+      border: 1px solid #e0f2f1;
+    }
+
+    .condo-details.active {
+      display: block;
+    }
+
+    .condo-field-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      padding: 4px 0;
+      border-bottom: 1px solid #e0f2f1;
+    }
+
+    .condo-field-row:last-child {
+      border-bottom: none;
+    }
+
+    .condo-field-label {
+      flex: 0 0 120px;
+      font-weight: bold;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .condo-field-input {
+      flex-grow: 1;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .condo-field-input input {
+      flex: 1;
+    }
+
+    /* Style for permanent text (Acc No) */
+    .permanent-text {
+        padding: 6px 8px;
+        font-size: 13px;
+        color: #333;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        display: inline-block;
+        min-width: 100px;
+    }
+
+    /* Styles for the pop-up */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .popup-content h4 {
+      margin-top: 0;
+      color: #2e7d32;
+    }
+
+    .popup-content button {
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="menu" id="utilitiesMenu">
+  <h3 onclick="toggleMenu()">Utilities <span class="toggle-arrow">▶</span></h3>
+  <div class="submenu">
+    <div class="section-title">🏦 Banks</div>
+    <table>
+      <tr><th>Bank</th><th>Account Number</th><th>User</th><th>Password</th></tr>
+      <tr><td>Maybank-SA</td><td>1140-9319-3543</td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td></tr>
+      <tr><td>Maybank-PI</td><td>5122-3159-6430</td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td></tr>
+      <tr><td>BSN</td><td>10124-29-87500778-5</td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td></tr>
+      <tr><td>Affin</td><td>200950038265</td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td></tr>
+    </table>
+
+    <div class="section-title">💡 Bills</div>
+    <table>
+      <tr><th>Provider</th><th>Acc No</th><th>User</th><th>Password</th><th>Link</th></tr>
+      <tr><td>TNB</td><td><span class="permanent-text" id="bil-tnb-acc-no">NA</span></td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td><td><a href="https://www.mytnb.com.my/" target="_blank" class="link-button">🔗 TNB</a></td></tr>
+      <tr><td>AIR</td><td><span class="permanent-text" id="bil-air-acc-no">NA</span></td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td><td><a href="https://www.airselangor.com/" target="_blank" class="link-button">🔗 AIR</a></td></tr>
+      <tr><td>Indah Water</td><td><span class="permanent-text" id="bil-iwk-acc-no">NA</span></td><td><input type="text" class="small-input"></td><td><div class="password-wrapper"><input type="password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div></td><td><a href="https://www.iwk.com.my/" target="_blank" class="link-button">🔗 IWK</a></td></tr>
+    </table>
+
+    <div class="section-title">🏡 Condo</div>
+
+    <div class="sub-section-title" onclick="toggleCondoDetails(this, 'kayuAraDetails')">
+      Kayu Ara <span class="toggle-condo-arrow">▶</span>
+    </div>
+    <div class="condo-details" id="kayuAraDetails">
+      <div class="condo-field-row">
+        <div class="condo-field-label">Unit No:</div>
+        <div class="condo-field-input"><input type="text" placeholder="e.g. A-01-01"></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Portal Link:</div>
+        <div class="condo-field-input"><a href="https://epay.mbpj.gov.my/auth/login/" class="link-button">🔗 Portal</a></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Loan:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-loan-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Taksiran:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-cukai-taksiran-acc-no">T00430020001607</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Petak:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-cukai-petak-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">TNB:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-tnb-acc-no">220194525500</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">AIR:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-air-acc-no">1607940000</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Indah Water:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="kayuara-iwk-acc-no">NA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-section-title" onclick="toggleCondoDetails(this, 'skyawani2Details')">
+      Skyawani2 <span class="toggle-condo-arrow">▶</span>
+    </div>
+    <div class="condo-details" id="skyawani2Details">
+      <div class="condo-field-row">
+        <div class="condo-field-label">Unit No:</div>
+        <div class="condo-field-input"><input type="text" placeholder="e.g. B-02-02"></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Portal Link:</div>
+        <div class="condo-field-input"><a href="https://dbayar.dbkl.gov.my/" class="link-button">🔗 Portal</a></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Loan:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-loan-acc-no">414084053248</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Taksiran:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-cukai-taksiran-acc-no">1612101035254</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Petak:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-cukai-petak-acc-no">14903358005157</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">TNB:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-tnb-acc-no">210176788703</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">AIR:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-air-acc-no">2750538792</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Indah Water:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="skyawani2-iwk-acc-no">11567023507</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-section-title" onclick="toggleCondoDetails(this, 'pvcDetails')">
+      PVC <span class="toggle-condo-arrow">▶</span>
+    </div>
+    <div class="condo-details" id="pvcDetails">
+      <div class="condo-field-row">
+        <div class="condo-field-label">Unit No:</div>
+        <div class="condo-field-input"><input type="text" placeholder="e.g. C-03-03"></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Portal Link:</div>
+        <div class="condo-field-input"><a href="https://epay.mbpj.gov.my/auth/login/" class="link-button">🔗 Portal</a></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Loan:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-loan-acc-no">LoanAccNo3</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Taksiran:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-cukai-taksiran-acc-no">T00220240003406</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Petak:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-cukai-petak-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">TNB:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-tnb-acc-no">220258535302</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">AIR:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-air-acc-no">6823321000</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Indah Water:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="pvc-iwk-acc-no">11287384475</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-section-title" onclick="toggleCondoDetails(this, 'palmasDetails')">
+      Palmas <span class="toggle-condo-arrow">▶</span>
+    </div>
+    <div class="condo-details" id="palmasDetails">
+      <div class="condo-field-row">
+        <div class="condo-field-label">Unit No:</div>
+        <div class="condo-field-input"><input type="text" placeholder="e.g. D-04-04"></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Portal Link:</div>
+        <div class="condo-field-input"><a href="https://mymps.mps.gov.my/" class="link-button">🔗 Portal</a></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Loan:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-loan-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Taksiran:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-cukai-taksiran-acc-no">4119190</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Petak:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-cukai-petak-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">TNB:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-tnb-acc-no">220302762706</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">AIR:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-air-acc-no">0173222000</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Indah Water:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="palmas-iwk-acc-no">11244732097</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-section-title" onclick="toggleCondoDetails(this, 'jasmineDetails')">
+      Jasmine <span class="toggle-condo-arrow">▶</span>
+    </div>
+    <div class="condo-details" id="jasmineDetails">
+      <div class="condo-field-row">
+        <div class="condo-field-label">Unit No:</div>
+        <div class="condo-field-input"><input type="text" placeholder="e.g. E-05-05"></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Portal Link:</div>
+        <div class="condo-field-input"><a href="https://www.mymbsa.gov.my/login" class="link-button">🔗 Portal</a></div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Loan:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-loan-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Taksiran:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-cukai-taksiran-acc-no">C0U513800290</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Cukai Petak:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-cukai-petak-acc-no">NA</span>
+          <input type="text" placeholder="User" class="small-input">
+          <div class="password-wrapper"><input type="password" placeholder="Password" class="small-input" oncopy="return false" onpaste="return false" oncut="return false"> <button class="toggle-btn" onclick="promptAndTogglePwd(this, '11')">👁️</button></div>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">TNB:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-tnb-acc-no">220907824909</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">AIR:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-air-acc-no">5416870000</span>
+        </div>
+      </div>
+      <div class="condo-field-row">
+        <div class="condo-field-label">Indah Water:</div>
+        <div class="condo-field-input">
+          <span class="permanent-text" id="jasmine-iwk-acc-no">11254661863</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="popup-overlay" id="condoPopup">
+  <div class="popup-content">
+    <h4 id="popupMessage"></h4>
+    <button onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<script>
+  function toggleMenu() {
+    const menu = document.getElementById("utilitiesMenu");
+    const title = menu.querySelector("h3");
+    menu.classList.toggle("active");
+    title.classList.toggle("pressed");
+  }
+
+  // Modified togglePwd function
+  function promptAndTogglePwd(button, correctPassword) {
+    const input = button.previousElementSibling;
+
+    // If currently a password field (masked), prompt for password
+    if (input.type === "password") {
+      const enteredPassword = prompt("Please enter the master password to view:");
+      if (enteredPassword === correctPassword) {
+        input.type = "text";
+        // Optional: show a temporary success message
+        // showPopup("Password revealed!");
+      } else if (enteredPassword !== null) { // User clicked cancel, do nothing if null
+        showPopup("Incorrect password!");
+      }
+    } else {
+      // If currently a text field (unmasked), switch back to password without prompt
+      input.type = "password";
+    }
+  }
+
+  function toggleCondoDetails(titleElement, detailsId) {
+    const details = document.getElementById(detailsId);
+    titleElement.classList.toggle('active');
+    details.classList.toggle('active');
+
+    // Show pop-up when a condo section is opened
+    if (details.classList.contains('active')) {
+      const condoName = titleElement.textContent.replace('▶', '').trim();
+      showPopup(`${condoName}`);
+    }
+  }
+
+  function showPopup(message) {
+    document.getElementById('popupMessage').textContent = message;
+    document.getElementById('condoPopup').style.display = 'flex';
+  }
+
+  function closePopup() {
+    document.getElementById('condoPopup').style.display = 'none';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+    inputs.forEach((input, index) => {
+      // Create a more robust key using attribute values for specific identification
+      let key = input.closest('.condo-details, table')?.id || 'general';
+      const row = input.closest('.condo-field-row');
+      if (row) {
+        const label = row.querySelector('.condo-field-label')?.textContent.replace(':', '').trim();
+        const inputType = input.type;
+        const inputPlaceholder = input.placeholder;
+        // Include a unique identifier for each input within a row, e.g., "user" or "password"
+        const inputRole = input.getAttribute('placeholder'); // Use placeholder to distinguish user/password
+        key = `${key}-${label}-${inputType}-${inputRole || index}`;
+      } else {
+        key = `input-${index}`; // Fallback for general table inputs
+      }
+
+      input.dataset.key = key;
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        input.value = saved;
+      }
+      input.addEventListener('input', () => {
+        localStorage.setItem(input.dataset.key, input.value);
+      });
+    });
+
+    // Restore active state of condo sections from local storage
+    document.querySelectorAll('.sub-section-title').forEach(titleElement => {
+      const detailsId = titleElement.nextElementSibling.id;
+      const key = `condo-toggle-${detailsId}`;
+      const savedState = localStorage.getItem(key);
+      if (savedState === 'active') {
+        titleElement.classList.add('active');
+        document.getElementById(detailsId).classList.add('active');
+      }
+
+      // Add event listener to save state on click
+      titleElement.addEventListener('click', () => {
+        if (titleElement.classList.contains('active')) {
+          localStorage.setItem(key, 'active');
+        } else {
+          localStorage.removeItem(key); // Remove if not active
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monthly Payment Checklist</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 1rem;
+      background-color: #f7f7f7;
+      max-width: 700px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    .selectors {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    select, button {
+      font-size: 1rem;
+    }
+    .payment-item {
+      background: #fff;
+      padding: 1rem;
+      margin: 0.7rem 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .sub-item {
+      margin-left: 1.5rem;
+      padding-top: 0.3rem;
+    }
+    .sub-item label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+    .info {
+      font-size: 0.85rem;
+      color: #555;
+    }
+    #downloadBtn {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.6rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #downloadBtn:hover {
+      background-color: #0056b3;
+    }
+    #toggleBtn {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(to bottom, #28a745, #218838);
+  border: none;
+  border-radius: 14px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    0 6px 0 #1c7c31,
+    0 6px 15px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+#toggleBtn:hover {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    0 8px 0 #1c7c31,
+    0 8px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+#toggleBtn:active {
+  background: linear-gradient(to bottom, #1e7e34, #19692c);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 2px 0 #145f24;
+  transform: translateY(4px);
+}
+
+  </style>
+</head>
+<body>
+
+  <button id="toggleBtn" onclick="toggleChecklist()">Monthly Commitment</button>
+
+  <div id="checklistContainer" style="display: none;">
+    <h2>Monthly Payment Checklist</h2>
+
+    <div class="selectors">
+      <label for="month">Month:
+        <select id="month" onchange="loadPayments()">
+          <option disabled selected value="">Select month</option>
+          <script>
+            const months = [
+              "January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"
+            ];
+            months.forEach(m => {
+              document.write(`<option value="${m}">${m}</option>`);
+            });
+          </script>
+        </select>
+      </label>
+
+      <label for="year">Year:
+        <select id="year" onchange="loadPayments()">
+          <script>
+            const thisYear = new Date().getFullYear();
+            for (let y = thisYear ; y <= thisYear + 5; y++) {
+              document.write(`<option value="${y}" ${y === thisYear ? "selected" : ""}>${y}</option>`);
+            }
+          </script>
+        </select>
+      </label>
+    </div>
+
+    <div id="payment-list"></div>
+
+    <button id="downloadBtn" onclick="downloadReport()">Download Monthly Report</button>
+  </div>
+
+  <script>
+    function toggleChecklist() {
+      const container = document.getElementById("checklistContainer");
+      container.style.display = container.style.display === "none" ? "block" : "none";
+    }
+
+    const paymentsTemplate = [
+      {
+        name: "SkyAwani2",
+        sub: [
+          { name: "Loan Payment", amount: 1656, dueDate: "1st" },
+          { name: "Maintenance", amount: 266.40, dueDate: "1st week" }
+        ]
+      },
+      {
+        name: "PVC",
+        sub: [
+          { name: "Loan Payment", amount: 1000, dueDate: "1st" },
+          { name: "Maintenance", amount: 237.60, dueDate: "1st week" }
+        ]
+      },
+      {
+        name: "HouseHold expenses",
+        sub: [
+          { name: "Grocery&Utility", amount: 1200, dueDate: "month end" },
+          { name: "Maid", amount: 200, dueDate: "month end" },
+          { name: "Milk", amount: 60, dueDate: "1st week" }
+        ]
+      },
+      {
+        name: "CreditCard",
+        sub: [
+          { name: "Coway Payment", amount: 104, dueDate: "month end" },
+          { name: "Digi", amount: 95.40, dueDate: "1st week" }
+        ]
+      },
+      { name: "Affin Bank", amount: 100, dueDate: "15th" },
+      { name: "BSN", amount: 500, dueDate: "20th" },
+      { name: "Public Mutual", amount: 200, dueDate: "1st" }
+    ];
+
+    function getStorageKey() {
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      return `payments-${month}-${year}`;
+    }
+
+    function loadPayments() {
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      if (!month || !year) return;
+
+      const listDiv = document.getElementById("payment-list");
+      listDiv.innerHTML = "";
+
+      const storageKey = getStorageKey();
+      const savedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+      let totalPaid = 0;
+
+      paymentsTemplate.forEach(payment => {
+        const div = document.createElement("div");
+        div.className = "payment-item";
+
+        let html = `<strong>${payment.name}</strong>`;
+
+        if (payment.sub) {
+          html += `<div class="sub-item">`;
+          payment.sub.forEach(sub => {
+            const key = `${payment.name}-${sub.name}`;
+            const paid = savedData[key]?.paid || false;
+            if (paid) totalPaid += sub.amount;
+
+            html += `
+              <label>
+                <span>
+                  <input type="checkbox" ${paid ? "checked" : ""} onchange="togglePaid('${key}', this.checked)">
+                  ${sub.name}
+                </span>
+                <span class="info">RM ${sub.amount} | Due: ${sub.dueDate}</span>
+              </label>
+            `;
+          });
+          html += `</div>`;
+        } else {
+          const key = `${payment.name}`;
+          const paid = savedData[key]?.paid || false;
+          if (paid) totalPaid += payment.amount;
+
+          html += `
+            <div class="sub-item">
+              <label>
+                <span>
+                  <input type="checkbox" ${paid ? "checked" : ""} onchange="togglePaid('${key}', this.checked)">
+                  Payment
+                </span>
+                <span class="info">RM ${payment.amount} | Due: ${payment.dueDate}</span>
+              </label>
+            </div>
+          `;
+        }
+
+        div.innerHTML = html;
+        listDiv.appendChild(div);
+      });
+
+      const totalDiv = document.createElement("div");
+      totalDiv.className = "payment-item";
+      totalDiv.innerHTML = `
+        <strong>Summary</strong>
+        <div class="sub-item">
+          <p>Total Paid: RM ${totalPaid.toFixed(2)}</p>
+        </div>
+      `;
+      listDiv.appendChild(totalDiv);
+    }
+
+    function togglePaid(key, isPaid) {
+      const storageKey = getStorageKey();
+      const currentData = JSON.parse(localStorage.getItem(storageKey)) || {};
+      currentData[key] = { paid: isPaid };
+      localStorage.setItem(storageKey, JSON.stringify(currentData));
+      loadPayments();
+    }
+
+    function downloadReport() {
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      if (!month || !year) {
+        alert("Please select both month and year.");
+        return;
+      }
+
+      const storageKey = getStorageKey();
+      const savedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+      let totalPaid = 0;
+
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const monthNum = String(now.getMonth() + 1).padStart(2, '0');
+      const yearShort = String(now.getFullYear()).slice(-2);
+      const formattedDate = `${day}/${monthNum}/${yearShort}`;
+
+      let report = `==============================\n`;
+      report += `  Monthly Payment Report\n`;
+      report += `        ${month} ${year}\n`;
+      report += `Generated: ${formattedDate}\n`;
+      report += `==============================\n\n`;
+
+      paymentsTemplate.forEach(payment => {
+        report += `${payment.name.toUpperCase()}\n`;
+        report += `------------------------------\n`;
+
+        if (payment.sub) {
+          payment.sub.forEach(sub => {
+            const key = `${payment.name}-${sub.name}`;
+            const amountStr = `RM ${sub.amount.toFixed(2)}`.padEnd(12);
+            const dueStr = `Due: ${sub.dueDate}`.padEnd(10);
+            report += `• ${sub.name.padEnd(22)} ${amountStr} | ${dueStr}\n`;
+            if (savedData[key]?.paid) totalPaid += sub.amount;
+          });
+        } else {
+          const key = `${payment.name}`;
+          const amountStr = `RM ${payment.amount.toFixed(2)}`.padEnd(12);
+          const dueStr = `Due: ${payment.dueDate}`.padEnd(10);
+          report += `• ${"Payment".padEnd(22)} ${amountStr} | ${dueStr}\n`;
+          if (savedData[key]?.paid) totalPaid += payment.amount;
+        }
+
+        report += `\n`;
+      });
+
+      report += `==============================\n`;
+      report += `Total Paid: RM ${totalPaid.toFixed(2)}\n`;
+      report += `==============================\n`;
+
+      const blob = new Blob([report], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Payment_${month}_${year}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    window.onload = function () {
+      const yearSelect = document.getElementById("year");
+      if (yearSelect) {
+        yearSelect.value = new Date().getFullYear();
+      }
+    };
+  </script>
+</body>
+</html>
+

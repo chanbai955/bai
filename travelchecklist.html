@@ -1,0 +1,226 @@
+<!-- Travel Checklist Trigger -->
+<div style="text-align: center; margin: 30px 0;">
+  <button id="travel-toggle" class="checklist-btn">🧳 Travel Checklist</button>
+</div>
+
+<!-- Password Modal -->
+<div id="travel-password-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:20px 30px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.4); max-width:300px; text-align:center;">
+    <h3 style="margin-top:0; color:#2e7d32;">Enter Password</h3>
+    <input type="password" id="travel-pwd-input" placeholder="Password" style="padding:8px 12px; width:100%; border-radius:6px; border:1px solid #ccc; margin-bottom:15px;" />
+    <div style="display:flex; justify-content:space-between;">
+      <button id="travel-unlock-btn" style="background:#2e7d32; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Unlock</button>
+      <button id="travel-cancel-btn" style="background:#aaa; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Travel Checklist Widget -->
+<div id="travel-widget" class="travel-widget" style="display:none">
+  <h2 style="color: green;">Boarding <span style="color: blue;"><br />September 19, 2025</span></h2>
+
+  <ul id="travel-checklist">
+    <li><label><input type="checkbox" /> Passport / ID</label></li>
+    <li><label><input type="checkbox" /> Travel tickets</label></li>
+    <li><label><input type="checkbox" /> Hotel booked</label></li>
+    <li><label><input type="checkbox" /> Packing complete</label></li>
+    <li><label><input type="checkbox" /> Toiletries packed</label></li>
+    <li><label><input type="checkbox" /> Electronics & chargers</label></li>
+    <li><label><input type="checkbox" /> Travel cards</label></li>
+    <li><label><input type="checkbox" /> Save documents</label></li>
+    <li><label><input type="checkbox" /> Transport arranged</label></li>
+    <li><label><input type="checkbox" /> Medications</label></li>
+    <li><label><input type="checkbox" /> Run register</label></li>
+    <li><label><input type="checkbox" /> Running gear</label></li>
+    <li><label><input type="checkbox" /> Cash / Currency</label></li>
+  </ul>
+
+  <h3 style="color: green; font-family: Georgia, serif; font-style: italic;">Travel Documents</h3>
+  <div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/16kMRyJNBaR3vMU40MqKghfKJ7aXCFwR7/preview" target="_blank" class="doc-btn">Passport</a>
+      <a href="https://drive.google.com/uc?export=download&id=16kMRyJNBaR3vMU40MqKghfKJ7aXCFwR7" class="download-btn" download>&#x2193;</a>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/1YMC0BSqvrDaMpkv4s3vKaLA1MSEN8AYE/preview" target="_blank" class="doc-btn">ID Card</a>
+      <a href="https://drive.google.com/uc?export=download&id=1YMC0BSqvrDaMpkv4s3vKaLA1MSEN8AYE" class="download-btn" download>&#x2193;</a>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/1j0k7nuFceRmy0Fd2OkkLhOjdXRgVb7Tc/preview" target="_blank" class="doc-btn">Flight</a>
+      <a href="https://drive.google.com/uc?export=download&id=1j0k7nuFceRmy0Fd2OkkLhOjdXRgVb7Tc" class="download-btn" download>&#x2193;</a>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/1DefExampleHotelID/preview" target="_blank" class="doc-btn">Hotel</a>
+      <a href="https://drive.google.com/uc?export=download&id=1DefExampleHotelID" class="download-btn" download>&#x2193;</a>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/1_qR_NxrDyT64ehiO6XxdGdmtcFAc_mc-/preview" target="_blank" class="doc-btn">Visa-OCI</a>
+      <a href="https://drive.google.com/uc?export=download&id=1_qR_NxrDyT64ehiO6XxdGdmtcFAc_mc-" class="download-btn" download>&#x2193;</a>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <a href="https://drive.google.com/file/d/1InsuranceFileExampleID/preview" target="_blank" class="doc-btn">Insurance</a>
+      <a href="https://drive.google.com/uc?export=download&id=1InsuranceFileExampleID" class="download-btn" download>&#x2193;</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .checklist-btn {
+    background: linear-gradient(145deg, #4CAF50, #2E7D32);
+    color: white;
+    padding: 8px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 8px 0 #1b5e20, 0 8px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+  }
+
+  .checklist-btn:hover {
+    background: linear-gradient(145deg, #66BB6A, #388E3C);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 0 #1b5e20, 0 12px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .travel-widget {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    padding: 20px;
+    color: #333;
+    border-radius: 10px;
+    max-width: 700px;
+    margin: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .travel-widget ul#travel-checklist {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px 20px;
+    padding-left: 0;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .travel-widget li {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .travel-widget input[type="checkbox"] {
+    margin-right: 10px;
+  }
+
+  .doc-btn {
+    background: linear-gradient(145deg, #1a73e8, #155abf);
+    color: #fff !important;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+    box-shadow: 0 6px 0 #0d47a1, 0 10px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.25s ease;
+  }
+
+  .download-btn {
+    font-weight: 900;
+    font-size: 28px;
+    padding: 0 10px;
+    margin-left: 6px;
+    cursor: pointer;
+    display: inline-block;
+    line-height: 1;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #4d94ff, #0039a6);
+    color: white;
+    box-shadow: 0 6px 0 #002b80, 0 10px 12px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+  }
+</style>
+
+<script>
+  (function () {
+    const toggleBtn = document.getElementById("travel-toggle");
+    const checklistBox = document.getElementById("travel-widget");
+    const checklist = document.getElementById("travel-checklist");
+    const modal = document.getElementById("travel-password-modal");
+    const pwdInput = document.getElementById("travel-pwd-input");
+    const unlockBtn = document.getElementById("travel-unlock-btn");
+    const cancelBtn = document.getElementById("travel-cancel-btn");
+    const authKey = "travelChecklistAuthorized";
+    const storageKey = "blogger-travel-checklist";
+
+    // Hashed password
+    const HASHED_PASSWORD = "a5e62c7934818453009c6bda541687aab5ea8e51937a0c5bd7fb7e9f4099be2b"; 
+    // Function to hash a string using SHA256
+    async function sha256(message) {
+      // Encode as UTF-8
+      const msgBuffer = new TextEncoder().encode(message);
+      // Hash the message
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      // Convert ArrayBuffer to Array
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      // Convert bytes to hex string
+      const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+      return hashHex;
+    }
+
+    // Always remove password access on reload
+    sessionStorage.removeItem(authKey);
+
+    toggleBtn.addEventListener("click", () => {
+      if (!sessionStorage.getItem(authKey)) {
+        modal.style.display = "flex";
+      } else {
+        const isVisible = checklistBox.style.display === "block";
+        checklistBox.style.display = isVisible ? "none" : "block";
+        toggleBtn.textContent = isVisible ? "🧳 Travel Checklist" : "🧳 Hide Checklist";
+      }
+    });
+
+    unlockBtn.addEventListener("click", async () => { // Make this an async function
+      const enteredPassword = pwdInput.value;
+      const hashedEnteredPassword = await sha256(enteredPassword); // Hash the entered password
+
+      if (hashedEnteredPassword === HASHED_PASSWORD) {
+        sessionStorage.setItem(authKey, "true");
+        modal.style.display = "none";
+        checklistBox.style.display = "block";
+        toggleBtn.textContent = "🧳 Hide Checklist";
+      } else {
+        alert("Incorrect password.");
+      }
+      pwdInput.value = ""; // Clear the password input
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+      pwdInput.value = ""; // Clear the password input on cancel
+    });
+
+    checklist.addEventListener("change", () => {
+      const states = Array.from(checklist.querySelectorAll("input[type=checkbox]")).map(cb => cb.checked);
+      localStorage.setItem(storageKey, JSON.stringify(states));
+    });
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    checklist.querySelectorAll("input[type=checkbox]").forEach((cb, i) => {
+      cb.checked = saved[i] || false;
+    });
+  })();
+</script>
+<div style="text-align: center; margin: 20px 0;">
+  <a href="https://drive.google.com/file/d/1bpmXYH1EjFTMaFKDkuAdRsu37FQTqhsl/view?usp=drive_link" target="_blank" class="checklist-btn" style="background: linear-gradient(145deg, #FF9800, #F57C00); text-decoration: none;">💡 Travel Tips</a>
+</div>

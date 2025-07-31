@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #eef2f6;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 25px;
+            overflow: hidden;
+            height: 35px;
+            margin: 25px 0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+    background: linear-gradient(to right, #4CAF50, #2196F3);
+    height: 100%;
+    color: white;
+    /* text-align: center; REMOVE THIS - replaced by flexbox centering */
+    line-height: 35px; /* This should match the height to vertically center single line text */
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: width 0.5s ease-in-out;
+    border-radius: 25px 0 0 25px; /* Rounded only on the left initially */
+
+    /* Flexbox properties for centering and preventing wrap */
+    display: flex; /* Enable flexbox */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content when wide enough */
+    white-space: nowrap; /* PREVENT TEXT WRAPPING - Re-added this but with min-width and padding */
+    overflow: hidden; /* Hide overflow, but combined with min-width it should be fine */
+
+    /* Adjust padding and min-width to ensure text visibility */
+    padding: 0 10px; /* Add horizontal padding for spacing */
+    box-sizing: border-box; /* Include padding in the element's total width */
+    min-width: 90px; /* Increased minimum width to accommodate "0.00 km" or "11.07 km" without wrapping */
+}
+
+/* Specific styling for when the bar is at very low percentages */
+.progress-bar[style*="width: 0%"],
+.progress-bar[style*="width: 1%"],
+.progress-bar[style*="width: 2%"],
+.progress-bar[style*="width: 3%"],
+.progress-bar[style*="width: 4%"],
+.progress-bar[style*="width: 5%"],
+.progress-bar[style*="width: 6%"],
+.progress-bar[style*="width: 7%"],
+.progress-bar[style*="width: 8%"],
+.progress-bar[style*="width: 9%"],
+.progress-bar[style*="width: 10%"],
+.progress-bar[style*="width: 11%"] /* Added 11% as per your image */
+{
+    justify-content: flex-start; /* Align text to the left for small widths */
+    padding-left: 10px; /* Keep left padding */
+}
+
+        .goal-display {
+            background: #f0f4f8;
+            color: #2c3e50;
+            border: 1px solid #dcdcdc;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            margin: 15px auto;
+            display: block;
+            font-weight: 600;
+        }
+
+        input[type="number"],
+        input[type="date"] {
+            padding: 12px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: calc(100% - 24px); /* Account for padding */
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            margin: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .set-goal-btn {
+            background: #007bff; /* Blue for setting goal */
+            color: white;
+        }
+
+        .set-goal-btn:hover {
+            background: #0056b3;
+        }
+
+        .add-btn {
+            background: #28a745; /* Green for adding distance */
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #218838;
+        }
+
+        .reset-btn {
+            background: #dc3545; /* Red for reset */
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c82333;
+        }
+
+        #dueDateDisplay span, #countdownDisplay {
+            font-size: 1.1em;
+            margin-top: 10px;
+            display: block;
+        }
+
+        #countdownDisplay {
+            animation: pulse 2s infinite;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .run-entry {
+            background: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 15px 20px;
+            margin: 12px auto;
+            max-width: 550px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+            text-align: left;
+            border-left: 5px solid #2196F3; /* A nice blue accent */
+        }
+
+        .run-entry div {
+            flex-grow: 1;
+            padding-right: 10px;
+        }
+
+        .run-entry strong {
+            color: #34495e;
+        }
+
+        .run-entry span {
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .edit-btn {
+            background: #ffc107; /* Yellow for edit */
+            color: #333;
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .delete-btn {
+            background: #f44336; /* Red for delete */
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #da190b;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+            text-align: left; /* Align modal content text to left */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: #555;
+        }
+
+        .save-modal-btn {
+            background: #28a745;
+            color: white;
+            margin-top: 20px;
+            width: calc(100% - 16px);
+            display: block; /* Make button full width */
+            text-align: center;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        .save-modal-btn:hover {
+            background: #218838;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🚴 Cycle Tracker</h2>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0.00 km</div>
+        </div>
+
+        <div class="goal-display" id="goalDisplay">🎯 Goal: 100 km</div>
+
+        <input type="number" id="goalInput" placeholder="Set your Goal (km)" />
+        <button class="set-goal-btn" onclick="updateGoal()">Set Goal</button>
+
+        <input type="number" id="distanceInput" placeholder="Enter ride distance (km)" />
+        <button class="add-btn" onclick="addDistance()">Add Ride</button>
+        <button class="reset-btn" onclick="resetProgress()">Reset All</button>
+
+        <input type="date" id="dueDateInput" onchange="setDueDate()" />
+        <p id="dueDateDisplay"></p>
+        <p id="countdownDisplay"></p>
+
+        <div id="details"></div>
+        <div id="history"></div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEditModal()">&times;</span>
+            <h3>Edit Ride Date</h3>
+
+            <label for="modalDateInput">Date:</label>
+            <input type="date" id="modalDateInput" />
+            <br>
+            <button class="save-modal-btn" onclick="saveEditedDate()">
+                💾 Save Changes
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY_CYCLE = "cycleDistances";
+        const DUE_DATE_KEY_CYCLE = "cycleDueDate";
+        const GOAL_KEY_CYCLE = "cycleGoal";
+
+        let cycleDistances = [];
+        let totalCycleGoal = parseFloat(localStorage.getItem(GOAL_KEY_CYCLE)) || 100;
+        let editCycleIndex = null; // Store the index of the item being edited
+
+        /**
+         * Updates the cycling goal and saves it to local storage.
+         */
+        function updateGoal() {
+            const goalInput = document.getElementById("goalInput");
+            const value = parseFloat(goalInput.value);
+            if (!isNaN(value) && value > 0) {
+                totalCycleGoal = value;
+                localStorage.setItem(GOAL_KEY_CYCLE, totalCycleGoal);
+                updateGoalDisplay();
+                updateProgress();
+                goalInput.value = ""; // Clear the input field
+            } else {
+                alert("Please enter a valid positive number for your goal.");
+            }
+        }
+
+        /**
+         * Updates the display for the current cycling goal.
+         */
+        function updateGoalDisplay() {
+            document.getElementById("goalDisplay").textContent = `🎯 Goal: ${totalCycleGoal} km`;
+        }
+
+        /**
+         * Adds a new cycling distance entry with the current date.
+         */
+        function addDistance() {
+            const input = document.getElementById("distanceInput");
+            const value = parseFloat(input.value);
+            if (!isNaN(value) && value > 0) {
+                // When adding, store the original index (which is simply the current length)
+                cycleDistances.push({ distance: value, date: new Date().toISOString(), originalIndex: cycleDistances.length });
+                saveData();
+                updateProgress();
+                input.value = ""; // Clear the input field
+            } else {
+                alert("Please enter a valid positive number for the distance.");
+            }
+        }
+
+        /**
+         * Resets all cycling progress after user confirmation.
+         */
+        function resetProgress() {
+            if (confirm("Are you sure you want to reset all cycling progress? This action cannot be undone.")) {
+                cycleDistances = [];
+                localStorage.removeItem(STORAGE_KEY_CYCLE);
+                localStorage.removeItem(DUE_DATE_KEY_CYCLE); // Also clear due date
+                localStorage.removeItem(GOAL_KEY_CYCLE);     // Also clear goal
+                totalCycleGoal = 100; // Reset goal to default
+                updateGoalDisplay();
+                document.getElementById("dueDateInput").value = ""; // Clear date input
+                document.getElementById("dueDateDisplay").textContent = ""; // Clear due date display
+                document.getElementById("countdownDisplay").textContent = ""; // Clear countdown display
+                updateProgress();
+            }
+        }
+
+        /**
+         * Sets the due date for the cycling goal and saves it to local storage.
+         */
+        function setDueDate() {
+            const input = document.getElementById("dueDateInput").value;
+            if (input) {
+                localStorage.setItem(DUE_DATE_KEY_CYCLE, input);
+                showDueDate(input);
+            } else {
+                localStorage.removeItem(DUE_DATE_KEY_CYCLE); // Remove if cleared
+                document.getElementById("dueDateDisplay").textContent = "";
+                document.getElementById("countdownDisplay").textContent = "";
+            }
+        }
+
+        /**
+         * Formats a date string to a UK locale string (e.g., "15 July 2025").
+         * @param {string} dateStr - The date string in ISO format.
+         * @returns {string} The formatted date string.
+         */
+        function formatDateUK(dateStr) {
+            const d = new Date(dateStr);
+            const utcDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            return utcDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        /**
+         * Displays the due date and a countdown/status message.
+         * @param {string} dateStr - The due date string in ISO format.
+         */
+        function showDueDate(dateStr) {
+            const display = document.getElementById("dueDateDisplay");
+            const countdown = document.getElementById("countdownDisplay");
+
+            const dueDate = new Date(dateStr);
+            dueDate.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const diffTime = dueDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            display.innerHTML = `📅 <span style="color:#d32f2f; font-weight:bold;">Goal Due:</span> <span style="color:#6a1b9a; font-style:italic;">${formatDateUK(dateStr)}</span>`;
+
+            if (diffDays > 0) {
+                countdown.innerHTML = `⏳ <span style="color:#3f51b5;">${diffDays} day(s) remaining</span>`;
+            } else if (diffDays === 0) {
+                countdown.innerHTML = `🚨 <span style="color:#ff9800;">Today is your goal date! Keep pushing!</span>`;
+            } else {
+                countdown.innerHTML = `❗ <span style="color:red;">Goal date passed by ${Math.abs(diffDays)} day(s)!</span>`;
+            }
+        }
+
+        /**
+         * Updates the progress bar, total/remaining distance, and ride history display.
+         */
+        function updateProgress() {
+            const total = cycleDistances.reduce((sum, entry) => sum + entry.distance, 0);
+            const percent = Math.min((total / totalCycleGoal) * 100, 100);
+
+            const bar = document.getElementById("progressBar");
+            bar.style.width = percent + "%";
+            bar.textContent = `${total.toFixed(2)} km`;
+
+            if (percent === 100) {
+                bar.style.borderRadius = "25px";
+            } else {
+                bar.style.borderRadius = "25px 0 0 25px";
+            }
+
+            document.getElementById("details").innerHTML =
+                `<p><strong>Total Cycled:</strong> ${total.toFixed(2)} km<br><strong>Remaining to Goal:</strong> ${(totalCycleGoal - total).toFixed(2)} km</p>`;
+
+            // Create a temporary array with original indices for sorting and display
+            const displayDistances = cycleDistances.map((d, index) => ({ ...d, originalIndex: index }));
+            // Sort this temporary array for display (most recent first)
+            displayDistances.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById("history").innerHTML = displayDistances.map(d => `
+                <div class="run-entry">
+                    <div><strong>Ride:</strong> <span style="color:#3f51b5; font-weight:bold;">${d.distance.toFixed(2)} km</span> on ${formatDateUK(d.date)}</div>
+                    <div>
+                        <button class="edit-btn" onclick="openEditModal(${d.originalIndex})">✏️ Edit</button>
+                        <button class="delete-btn" onclick="deleteRide(${d.originalIndex})">🗑️ Del</button>
+                    </div>
+                </div>`).join("");
+        }
+
+        /**
+         * Deletes a ride entry based on its original index.
+         * @param {number} originalIdx - The original index of the ride to delete.
+         */
+        function deleteRide(originalIdx) {
+            if (confirm("Delete this ride entry?")) {
+                // Find the actual index in the current cycleDistances array based on originalIndex
+                const actualIndex = cycleDistances.findIndex(entry => entry.originalIndex === originalIdx);
+
+                if (actualIndex > -1) {
+                    cycleDistances.splice(actualIndex, 1);
+                    // Re-assign original indices to maintain integrity after deletion
+                    cycleDistances.forEach((entry, i) => entry.originalIndex = i);
+                    saveData();
+                    updateProgress();
+                }
+            }
+        }
+
+        /**
+         * Saves the current `cycleDistances` array to local storage.
+         */
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY_CYCLE, JSON.stringify(cycleDistances));
+        }
+
+        /**
+         * Opens the edit modal and pre-fills its date input with the selected ride's date.
+         * @param {number} originalIdx - The original index of the ride entry to edit.
+         */
+        function openEditModal(originalIdx) {
+            editCycleIndex = originalIdx; // Store the original index
+            
+            // Find the actual entry using the original index
+            const entry = cycleDistances.find(e => e.originalIndex === originalIdx);
+
+            if (entry) {
+                document.getElementById("modalDateInput").value = new Date(entry.date).toISOString().split("T")[0];
+                document.getElementById("editModal").style.display = "flex";
+            }
+        }
+
+        /**
+         * Closes the edit modal.
+         */
+        function closeEditModal() {
+            document.getElementById("editModal").style.display = "none";
+            editCycleIndex = null; // Clear the edit index
+        }
+
+        /**
+         * Saves only the edited date for a ride entry.
+         */
+        function saveEditedDate() {
+            const newDate = document.getElementById("modalDateInput").value;
+
+            if (editCycleIndex !== null && newDate) {
+                // Find the actual entry in the array using the original index
+                const actualIndex = cycleDistances.findIndex(entry => entry.originalIndex === editCycleIndex);
+
+                if (actualIndex > -1) {
+                    cycleDistances[actualIndex].date = new Date(newDate).toISOString();
+                    saveData();
+                    updateProgress();
+                    closeEditModal();
+                }
+            } else {
+                alert("Please select a date for the ride.");
+            }
+        }
+
+        /**
+         * Loads saved data from local storage when the page loads.
+         */
+        function loadSavedData() {
+            const saved = localStorage.getItem(STORAGE_KEY_CYCLE);
+            if (saved) {
+                cycleDistances = JSON.parse(saved);
+                // Ensure loaded data has originalIndex, and re-assign if not present or incorrect
+                cycleDistances.forEach((entry, i) => {
+                    if (entry.originalIndex === undefined || entry.originalIndex !== i) {
+                        entry.originalIndex = i;
+                    }
+                });
+            }
+
+            const savedDate = localStorage.getItem(DUE_DATE_KEY_CYCLE);
+            if (savedDate) {
+                document.getElementById("dueDateInput").value = savedDate;
+                showDueDate(savedDate);
+            }
+
+            const savedGoal = localStorage.getItem(GOAL_KEY_CYCLE);
+            if (savedGoal) totalCycleGoal = parseFloat(savedGoal);
+
+            updateGoalDisplay();
+        }
+
+        // Initialize the tracker when the script loads
+        loadSavedData();
+        updateProgress();
+    </script>
+</body>
+</html>

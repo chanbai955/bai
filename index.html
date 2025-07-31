@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Consolidated App (Side View)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #sidebar {
+            width: 220px;
+            background-color: #333; /* Dark sidebar */
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+            display: flex;
+            flex-direction: column; /* Arrange items vertically */
+        }
+        #sidebar h2 {
+            text-align: center;
+            color: #007bff; /* Accent color for title */
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        /* Style for the date/time display in the sidebar */
+        #current-datetime {
+            text-align: center;
+            font-size: 12px;
+            color: #bbb;
+            margin-top: auto; /* Push to the bottom of the sidebar */
+            padding-top: 15px;
+            border-top: 1px solid #555;
+        }
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            flex-grow: 1; /* Allow the list to take available space */
+        }
+        #sidebar li {
+            margin-bottom: 10px;
+        }
+        #sidebar a {
+            display: block;
+            padding: 12px 15px;
+            background-color: #444; /* Slightly lighter background for main links */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        #sidebar a:hover {
+            background-color: #007bff; /* Highlight on hover */
+            transform: translateX(5px); /* Slight shift on hover */
+        }
+
+        /* Styles for sub-menu */
+        .sub-menu {
+            list-style-type: none;
+            padding-left: 20px; /* Indent sub-menu items */
+            max-height: 0; /* Initially hidden */
+            overflow: hidden;
+            transition: max-height 0.3s ease-out; /* Smooth transition for showing/hiding */
+        }
+
+        .sub-menu.show {
+            max-height: 200px; /* Adjusted to accommodate new items */
+            transition: max-height 0.3s ease-in;
+        }
+
+        /* Specific styles for sub-menu links - now with increased specificity */
+        #sidebar .sub-menu li a {
+            padding: 6px 8px; /* Even smaller padding for sub-menu links */
+            background-color: #28a745; /* Green background for sub-menu */
+            color: white; /* White text for contrast on green */
+            font-size: 10px; /* Much smaller font size for sub-menu */
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+
+        #sidebar .sub-menu li a:hover {
+            background-color: #218838; /* Darker green on hover for sub-menu */
+            transform: translateX(3px);
+        }
+
+        #main-content {
+            flex-grow: 1; /* Allow main content to take up remaining space */
+            background-color: #fff;
+            overflow: hidden; /* Hide overflow of iframe if it's too big */
+        }
+
+        /* Styles for the iframe that will load your content */
+        #content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none; /* Remove default iframe border */
+            box-sizing: border-box; /* Include padding in the element's total width and height */
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>My App</h2>
+        <ul>
+            <li><a href="#" onclick="loadContent('about.html')">About</a></li>
+            <li><a href="#" onclick="loadContent('list.html')">My To-Do List</a></li>
+            <li><a href="#" onclick="loadContent('run.html')">Run Tracker</a></li>
+            <li><a href="#" onclick="loadContent('cycle.html')">Cycle Tracker</a></li>
+            <li><a href="#" class="menu-toggle" data-target="utilities-submenu" data-load-file="utilities.html">Utilities</a>
+                <ul id="utilities-submenu" class="sub-menu">
+                    <li><a href="#" onclick="loadContent('cukai.html')">Cukai Taksiran</a></li>
+                    <li><a href="#" onclick="loadContent('iwk.html')">Indah Water</a></li>
+                    <li><a href="#" onclick="loadContent('tnb.html')">TNB (Electricity)</a></li>
+                    <li><a href="#" onclick="loadContent('air.html')">Air (Water)</a></li>
+                </ul>
+            </li>
+            <li><a href="#" onclick="loadContent('travelchecklist.html')">Travel Checklist</a></li>
+            <li><a href="#" onclick="loadContent('debtors-2025.html')">Debtors Tracker</a></li>
+            <li><a href="#" onclick="loadContent('trip-expenses.html')">Trip Expenses</a></li>
+            <li><a href="#" onclick="loadContent('trip-expenses-asean.html')">Trip Expenses-Asean</a></li>
+            <li><a href="#" onclick="loadContent('converter.html')">Currency Converter</a></li>
+            <li><a href="#" onclick="loadContent('monthly-expenses.html')">Monthly Expenses</a></li>
+            <li><a href="#" onclick="loadContent('finance-tracker.html')">Finance Tracker</a></li>
+            <li><a href="#" onclick="loadContent('rental.html')">Rental Tracker</a></li>
+            <li><a href="#" onclick="loadContent('acc-mgmt.html')">My Account</a></li>
+            <li><a href="#" onclick="loadContent('save.html')">My Saving Goal</a></li>
+            <li><a href="#" onclick="loadContent('cal.html')">My Calulator</a></li>
+            <li><a href="#" onclick="loadContent('run-bib.html')">My RunBib</a></li>
+            <li><a href="#" onclick="loadContent('cycle-bib.html')">My CycleBib</a></li>
+            <li><a href="#" onclick="loadContent('countdown.html')">Countdown</a></li>
+        </ul>
+        <div id="current-datetime"></div>
+    </div>
+
+    <div id="main-content">
+        <iframe id="content-iframe" src="about.html" title="Application Content"></iframe>
+    </div>
+
+    <script>
+        // Function to load content into the iframe
+        function loadContent(filename) {
+            document.getElementById('content-iframe').src = filename;
+        }
+
+        // Function to display current date and time
+        function displayCurrentDateTime() {
+            const dateTimeElement = document.getElementById('current-datetime');
+            const now = new Date();
+
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+
+            const formattedDate = now.toLocaleDateString(undefined, dateOptions);
+            const formattedTime = now.toLocaleTimeString(undefined, timeOptions);
+
+            dateTimeElement.innerHTML = `${formattedDate}<br>${formattedTime}`;
+        }
+
+        // Function to toggle sub-menu visibility AND load content
+        function toggleAndLoadContent(event) {
+            event.preventDefault(); // Prevent default link behavior
+
+            const targetId = event.target.dataset.target;
+            const fileToLoad = event.target.dataset.loadFile; // Get the file to load
+            const subMenu = document.getElementById(targetId);
+
+            if (fileToLoad) {
+                loadContent(fileToLoad); // Load the content into the iframe
+            }
+
+            if (subMenu) {
+                subMenu.classList.toggle('show'); // Toggle the clicked sub-menu
+            }
+        }
+
+        // Call the function when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDateTime();
+            // Optional: You can make the date and time update every second
+            setInterval(displayCurrentDateTime, 1000); // Uncomment to enable live update
+
+            // Add event listeners to menu items that have sub-menus
+            // Now, we use the new toggleAndLoadContent function
+            document.querySelectorAll('.menu-toggle').forEach(item => {
+                item.addEventListener('click', toggleAndLoadContent);
+            });
+        });
+    </script>
+</body>
+</html>
