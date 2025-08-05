@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB Wood Inventory Table - Auto-reindexing No Column</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* General Body and H1 Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 15px;
+            background-color: #f8f8f8;
+            font-size: 14px;
+        }
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #5A3A2B;
+            background: linear-gradient(to bottom, #7B5C49, #5A3A2B);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow:
+                -1px -1px 0 rgba(0,0,0,0.3),
+                1px 1px 0 rgba(255,255,255,0.4),
+                2px 2px 3px rgba(0,0,0,0.4);
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Responsive Table Container and Layout */
+        .table-container {
+            width: 100%; /* Full width container */
+            overflow-x: auto; /* Allow horizontal scrolling on small screens */
+            -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+        }
+        table {
+            width: 100%;
+            min-width: 768px; /* Set a minimum width to prevent table from getting too squished */
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 7px 3px;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Explicit Column Widths and Text Alignment */
+        th:nth-child(1), td:nth-child(1) { width: 5%; text-align: center; } /* No */
+        th:nth-child(2), td:nth-child(2) { width: 12%; text-align: center; } /* Date */
+        th:nth-child(3), td:nth-child(3) { width: 25%; text-align: left; } /* Item Type of Woods */
+        th:nth-child(4), td:nth-child(4) { width: 10%; text-align: center; } /* Thickness */
+        th:nth-child(5), td:nth-child(5) { width: 12%; text-align: right; } /* Price Per Unit */
+        th:nth-child(6), td:nth-child(6) { width: 8%; text-align: center; } /* Quantity */
+        th:nth-child(7), td:nth-child(7) { width: 10%; text-align: right; } /* Total */
+        th:nth-child(8), td:nth-child(8) { width: 18%; text-align: center; } /* Actions */
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            color: #444;
+        }
+        td[contenteditable="true"]:focus {
+            outline: 1px solid #4CAF50;
+            background-color: #f0fff0;
+        }
+        td.date-cell input[type="date"] {
+            border: 1px solid #4CAF50;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+
+        /* Responsive Controls */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap to the next line */
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            width: 100%; /* Make controls full width */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .controls button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+        .add-row-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .add-row-btn:hover {
+            background-color: #0069d9;
+        }
+        .save-txt-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .save-txt-btn:hover {
+            background-color: #218838;
+        }
+        .actions button {
+            margin-right: 3px;
+            padding: 3px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .actions .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        .actions .delete-btn:hover {
+            background-color: #c82333;
+        }
+        tfoot td {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            padding: 7px 3px;
+            font-size: 13px;
+        }
+        tfoot .overall-total-value {
+            text-align: right;
+        }
+        .icon-download::before {
+            content: "⬇️";
+            display: inline-block;
+            margin-right: 3px;
+            font-size: 0.9em;
+        }
+        .icon-add::before {
+            content: "➕";
+            display: inline-block;
+            margin-right: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Thiru Wood Inventory </h1>
+
+    <div class="controls">
+        <button class="add-row-btn icon-add">Add New Row</button>
+        <button class="save-txt-btn icon-download" id="saveTxtButton">Save as TXT</button>
+    </div>
+
+    <div class="table-container">
+        <table id="woodInventoryTable">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Date</th>
+                    <th>Item Type of Woods</th>
+                    <th>Thickness</th>
+                    <th>Price Per Unit</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" style="text-align: right;"><strong>Overall Total:</strong></td>
+                    <td class="overall-total-value">0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        const DB_NAME = 'WoodInventoryDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'woods';
+        let db;
+        let nextRowId = 1;
+
+        // Helper to format date for display (DD/MM/YYYY)
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('-'); // Assumes YYYY-MM-DD
+            if (parts.length === 3) {
+                // Return DD/MM/YYYY
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
+        }
+
+        // Helper to ensure date is in YYYY-MM-DD format for input[type="date"] and storage
+        function formatStorageDate(dateInput) {
+             if (!dateInput) return '';
+             if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+                 return dateInput;
+             }
+             const parts = dateInput.split('/');
+             if (parts.length === 3) {
+                 return `${parts[2]}-${parts[1]}-${parts[0]}`;
+             }
+             const d = new Date(dateInput);
+             if (!isNaN(d)) {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+             }
+             return '';
+        }
+
+        // --- IndexedDB Initialization ---
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB opened successfully');
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.errorCode);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // --- Data Handling Functions (Table <-> IndexedDB) ---
+
+        // Function to load data from IndexedDB into the table
+        function loadTableData() {
+            if (!db) {
+                console.error('Database not open.');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+            const request = objectStore.getAll();
+            const tableBody = document.querySelector('#woodInventoryTable tbody');
+            tableBody.innerHTML = '';
+
+            request.onsuccess = (event) => {
+                const woodItems = event.target.result;
+                let currentMaxId = 0;
+
+                woodItems.sort((a, b) => a.id - b.id).forEach(item => {
+                    const newRow = document.createElement('tr');
+                    newRow.dataset.rowId = item.id;
+                    newRow.innerHTML = `
+                        <td contenteditable="true" data-col-name="no">${item.no}</td>
+                        <td class="date-cell" data-col-name="date">${formatDisplayDate(item.date || '')}</td>
+                        <td contenteditable="true" data-col-name="itemType">${item.itemType}</td>
+                        <td contenteditable="true" data-col-name="thickness">${item.thickness || ''}</td>
+                        <td contenteditable="true" data-col-name="pricePerUnit">${item.pricePerUnit.toFixed(2)}</td>
+                        <td contenteditable="true" data-col-name="quantity">${item.quantity}</td>
+                        <td class="total">0.00</td>
+                        <td class="actions">
+                            <button class="delete-btn">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(newRow);
+                    updateRowTotal(newRow);
+                    currentMaxId = Math.max(currentMaxId, item.id);
+                });
+                nextRowId = currentMaxId + 1;
+                updateOverallTotal();
+                updateRowNumbers(); // Re-index after loading data to ensure "No" column is correct
+
+                console.log('Table data loaded from IndexedDB.');
+            };
+
+            request.onerror = (event) => {
+                console.error('Error loading data:', event.target.error);
+            };
+        }
+
+        // Function to add a single item to IndexedDB
+        function addItemToDB(item) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.add(item);
+
+                request.onsuccess = (event) => {
+                    console.log('Item added to IndexedDB:', item);
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error adding item to DB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Function to update a single item in IndexedDB
+        function updateItemInDB(item) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.put(item);
+
+                request.onsuccess = () => {
+                    console.log('Item updated in IndexedDB:', item);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error updating item in DB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Function to delete a single item from IndexedDB
+        function deleteItemFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.delete(id);
+
+                request.onsuccess = () => {
+                    console.log('Item deleted from IndexedDB with ID:', id);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error deleting item from DB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // --- UI Logic (HTML Table Interactions) ---
+
+        // Function to calculate and update individual total for a row
+        function updateRowTotal(row) {
+            const priceCell = row.querySelector('[data-col-name="pricePerUnit"]');
+            const quantityCell = row.querySelector('[data-col-name="quantity"]');
+            const totalCell = row.querySelector('.total');
+
+            const pricePerUnit = parseFloat(priceCell.textContent.trim());
+            const quantity = parseInt(quantityCell.textContent.trim());
+
+            if (!isNaN(pricePerUnit) && !isNaN(quantity)) {
+                totalCell.textContent = (pricePerUnit * quantity).toFixed(2);
+            } else {
+                totalCell.textContent = 'Invalid Input';
+            }
+            updateOverallTotal();
+        }
+
+        // Function to calculate and update the overall total
+        function updateOverallTotal() {
+            const allTotals = document.querySelectorAll('#woodInventoryTable tbody .total');
+            let overallSum = 0;
+            allTotals.forEach(cell => {
+                const value = parseFloat(cell.textContent);
+                if (!isNaN(value)) {
+                    overallSum += value;
+                }
+            });
+            document.querySelector('.overall-total-value').textContent = overallSum.toFixed(2);
+        }
+
+        // --- Save as TXT Functionality ---
+        function saveTableAsTxt() {
+            const table = document.getElementById('woodInventoryTable');
+            let txtContent = '';
+
+            // Get headers
+            const headers = Array.from(table.querySelectorAll('thead th'))
+                               .map(th => th.textContent.trim());
+            const filteredHeaders = headers.filter(header => header !== 'Actions');
+            txtContent += filteredHeaders.join('\t') + '\n';
+
+            // Get rows (tbody)
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                const rowData = [];
+                // Collect data from relevant columns in display format (DD/MM/YYYY)
+                rowData.push(cells[0].textContent.trim()); // No
+                rowData.push(cells[1].textContent.trim()); // Date (already DD/MM/YYYY)
+                rowData.push(cells[2].textContent.trim()); // Item Type
+                rowData.push(cells[3].textContent.trim()); // Thickness
+                rowData.push(cells[4].textContent.trim()); // Price Per Unit
+                rowData.push(cells[5].textContent.trim()); // Quantity
+                rowData.push(cells[6].textContent.trim()); // Total
+                txtContent += rowData.join('\t') + '\n';
+            });
+
+            // Get Overall Total from tfoot
+            const overallTotalLabel = document.querySelector('tfoot td:first-child').textContent.trim();
+            const overallTotalValue = document.querySelector('.overall-total-value').textContent.trim();
+            txtContent += '\n';
+            txtContent += overallTotalLabel + '\t\t\t\t\t' + overallTotalValue + '\n';
+
+            const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wood_inventory_with_total.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Function to re-index the "No" column for display
+        function updateRowNumbers() {
+            const tableBody = document.querySelector('#woodInventoryTable tbody');
+            Array.from(tableBody.children).forEach((row, index) => {
+                const noCell = row.querySelector('[data-col-name="no"]');
+                if (noCell) {
+                    noCell.textContent = index + 1; // Update the 'No' display value
+                }
+            });
+            // After re-indexing, the next new ID should be based on the total count of rows
+            nextRowId = tableBody.children.length + 1;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.querySelector('#woodInventoryTable tbody');
+            const addRowBtn = document.querySelector('.add-row-btn');
+            const saveTxtButton = document.getElementById('saveTxtButton');
+
+            // 1. Open IndexedDB and then load data
+            openDB().then(() => {
+                loadTableData();
+            }).catch(error => {
+                console.error('Failed to open database or load data:', error);
+            });
+
+            // Handle content editing for non-date cells (input for live calculation, blur/Enter for save)
+            tableBody.addEventListener('input', (event) => {
+                const target = event.target;
+                if (target.tagName === 'TD' && target.getAttribute('contenteditable') === 'true') {
+                    const row = target.closest('tr');
+                    if (target.dataset.colName === 'pricePerUnit' || target.dataset.colName === 'quantity') {
+                        updateRowTotal(row);
+                    }
+                    // No automatic re-indexing here, manual edit for 'no' persists until a row is deleted.
+                }
+            });
+
+            // Save data to DB when a contenteditable cell loses focus (blur) or Enter is pressed
+            tableBody.addEventListener('blur', (event) => {
+                const target = event.target;
+                if (target.tagName === 'TD' && target.getAttribute('contenteditable') === 'true') {
+                    const row = target.closest('tr');
+                    const id = parseInt(row.dataset.rowId);
+                    if (!isNaN(id)) {
+                        const updatedItem = {
+                            id: id,
+                            no: parseInt(row.querySelector('[data-col-name="no"]').textContent.trim()),
+                            date: formatStorageDate(row.querySelector('[data-col-name="date"]').textContent.trim()),
+                            itemType: row.querySelector('[data-col-name="itemType"]').textContent.trim(),
+                            thickness: row.querySelector('[data-col-name="thickness"]').textContent.trim(),
+                            pricePerUnit: parseFloat(row.querySelector('[data-col-name="pricePerUnit"]').textContent.trim()),
+                            quantity: parseInt(row.querySelector('[data-col-name="quantity"]').textContent.trim())
+                        };
+                        updateItemInDB(updatedItem);
+                    }
+                }
+            }, true);
+
+            tableBody.addEventListener('keydown', (event) => {
+                const target = event.target;
+                if (target.tagName === 'TD' && target.getAttribute('contenteditable') === 'true' && event.key === 'Enter') {
+                    event.preventDefault();
+                    target.blur();
+                }
+            });
+
+            // --- Date Picker Logic ---
+            tableBody.addEventListener('click', (event) => {
+                const target = event.target;
+                const dateCell = target.closest('td[data-col-name="date"]');
+
+                if (dateCell && !dateCell.querySelector('input[type="date"]')) {
+                    const currentDisplayValue = dateCell.textContent.trim();
+                    const inputDateValue = formatStorageDate(currentDisplayValue);
+
+                    dateCell.innerHTML = `<input type="date" value="${inputDateValue}">`;
+                    const dateInput = dateCell.querySelector('input[type="date"]');
+                    dateInput.focus();
+
+                    const saveDate = () => {
+                        const newDateFromInput = dateInput.value;
+                        dateCell.textContent = formatDisplayDate(newDateFromInput);
+                        dateCell.blur();
+                    };
+
+                    dateInput.addEventListener('change', saveDate);
+                    dateInput.addEventListener('blur', saveDate);
+                    dateInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            saveDate();
+                        }
+                    });
+                }
+            });
+
+
+            // Handle delete button clicks
+            tableBody.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.classList.contains('delete-btn')) {
+                    const row = target.closest('tr');
+                    const idToDelete = parseInt(row.dataset.rowId);
+                    const rowNo = row.querySelector('[data-col-name="no"]').textContent;
+
+                    if (confirm(`Are you sure you want to delete row No. ${rowNo} (ID: ${idToDelete})?`)) {
+                        deleteItemFromDB(idToDelete).then(() => {
+                            row.remove(); // Remove from UI
+                            updateOverallTotal(); // Recalculate overall total
+
+                            // Re-index 'No' column for remaining rows after deletion
+                            updateRowNumbers();
+                            console.log('Row deleted and remaining "No" values re-indexed.');
+                        }).catch(error => {
+                            console.error('Failed to delete item from DB:', error);
+                            alert('Failed to delete item. Please try again.');
+                        });
+                    }
+                }
+            });
+
+            // Add new row functionality
+            addRowBtn.addEventListener('click', () => {
+                const today = new Date();
+                const defaultStorageDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                const newRowData = {
+                    no: nextRowId.toString(), // Use nextRowId for initial No.
+                    date: defaultStorageDate,
+                    itemType: 'New Wood',
+                    thickness: '20 mm',
+                    pricePerUnit: 0.00,
+                    quantity: 0
+                };
+
+                addItemToDB(newRowData).then(generatedId => {
+                    const newRow = document.createElement('tr');
+                    newRow.dataset.rowId = generatedId;
+                    newRow.innerHTML = `
+                        <td contenteditable="true" data-col-name="no">${newRowData.no}</td>
+                        <td class="date-cell" data-col-name="date">${formatDisplayDate(newRowData.date)}</td>
+                        <td contenteditable="true" data-col-name="itemType">${newRowData.itemType}</td>
+                        <td contenteditable="true" data-col-name="thickness">${newRowData.thickness}</td>
+                        <td contenteditable="true" data-col-name="pricePerUnit">${newRowData.pricePerUnit.toFixed(2)}</td>
+                        <td contenteditable="true" data-col-name="quantity">${newRowData.quantity}</td>
+                        <td class="total">0.00</td>
+                        <td class="actions">
+                            <button class="delete-btn">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(newRow);
+                    updateRowTotal(newRow);
+                    updateRowNumbers(); // Re-index all rows after adding to ensure correct order
+                }).catch(error => {
+                    console.error('Failed to add new item to DB:', error);
+                    alert('Failed to add new row. Please check console for details.');
+                });
+            });
+
+            // Event listener for the "Save as TXT" button
+            saveTxtButton.addEventListener('click', saveTableAsTxt);
+        });
+        
+        
+        
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
+    }
+</script>
+        
+    
+</body>
+</html>
